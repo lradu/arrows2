@@ -1,10 +1,20 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
+import { CommonModule } from '@angular/common';
 
 import { AppComponent } from './app.component';
-import { AngularFireModule } from 'angularfire2';
+
+import { AngularFireModule,
+  FIREBASE_PROVIDERS,
+  AngularFire,
+  AuthMethods,
+  AuthProviders
+} from 'angularfire2';
+
+import { AuthModule } from './auth/auth.module';
+import { AppRouting } from './app.routing';
+import { HomeComponent } from './home/home.component';
+import { DashModule } from './dashboard/dashboard.module';
 
 
 export const firebaseConfig = {
@@ -15,15 +25,23 @@ export const firebaseConfig = {
   messagingSenderId: "453915506998"
 };
 
+export const firebaseAuthConfig = {
+  provider: AuthProviders.Password,
+  method: AuthMethods.Password
+}
+
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    HomeComponent,
   ],
   imports: [
     BrowserModule,
-    FormsModule,
-    HttpModule,
-    AngularFireModule.initializeApp(firebaseConfig)
+    AngularFireModule.initializeApp(firebaseConfig, firebaseAuthConfig),
+    AuthModule,
+    DashModule,
+    AppRouting,
+    CommonModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
