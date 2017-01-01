@@ -1,1 +1,14 @@
 /* You can add global styles to this file, and also import other style files */
+nav .dropdown-toggle::after {
+    display:none
+}
+
+nav a {
+	cursor: pointer;
+}
+
+#zoom-group {
+	position: absolute;
+	padding: 20px;
+}
+

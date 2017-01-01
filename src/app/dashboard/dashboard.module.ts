@@ -15,7 +15,7 @@ import { DiagramComponent } from './diagram.component';
     FormsModule,
     CommonModule
    ],
-   providers: [AuthGuard],
+  providers: [AuthGuard],
   declarations: [ 
     DashboardComponent,
     ProfileComponent,

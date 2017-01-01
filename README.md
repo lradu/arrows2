@@ -1,1 +1,1 @@
-# Arrows2
+# Arrows 2 - graph diagram library
