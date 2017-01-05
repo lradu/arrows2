@@ -1,0 +1,19 @@
+#tools {
+	position: absolute;
+	padding-left: 30px;
+	padding-right: 30px;
+	background-color: #f7f7f9;
+	height: calc(100% - 60px);
+}
+
+#zoom-group {
+	position: absolute;
+	margin-top: 20px;
+	margin-left: 20px;
+}
+
+#diagram {
+	position: absolute;
+	width: 100%;
+	height: calc(100% - 60px);
+}

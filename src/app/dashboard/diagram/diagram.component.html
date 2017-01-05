@@ -1,0 +1,51 @@
+<div id="diagram">
+</div>
+<div id="tools" class="col-lg-3 col-md-4 col-xs-12 offset-lg-9 offset-md-8" *ngIf="showTools">
+	<form>
+		<div class="form-group row" >
+			<a (click)="closeTools()" style="font-size: 1.4em;"><i class="fa fa-times-circle-o" aria-hidden="true"></i></a>
+		</div>
+	  <div class="form-group">
+	    <label for="caption">Caption</label>
+	    <input type="text" class="form-control" id="caption">
+	  </div>
+	  <div class="form-group">
+	    <label for="properties">Properties</label>
+	    <textarea class="form-control" id="properties" rows="6"></textarea>
+	  </div>
+	  <div class="form-group">
+	  	<div class="btn-group" data-toggle="buttons">
+	  	  <label class="btn btn-secondary active">
+	  	    <input type="radio" name="options" id="option1" autocomplete="off" checked> <i class="fa fa-circle-thin fa-2x" aria-hidden="true"></i>
+	  	  </label>
+	  	  <label class="btn btn-secondary">
+	  	    <input type="radio" name="options" id="option2" autocomplete="off"> <i class="fa fa-square-o fa-2x" aria-hidden="true"></i>
+	  	  </label>
+	  	</div>
+	  </div>
+	  <div class="form-group">
+	    <div class="input-group">
+	      <span class="input-group-btn">
+        	<button class="btn btn-secondary" type="button">Text Color</button>
+      	</span>
+	      <input type="text" class="form-control" id="text-color" >
+	    </div>
+	  </div>
+	  <div class="form-group">
+	    <div class="input-group">
+	      <span class="input-group-btn">
+        	<button class="btn btn-secondary" type="button">Background</button>
+      	</span>
+	      <input type="text" class="form-control" id="bg-color">
+	    </div>
+	  </div>
+	  <div class="form-group">
+	  	<button type="submit" class="btn btn-primary">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
+	  	<button type="button" class="btn btn-danger float-xs-right">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
+	  </div>
+	</form>
+</div>
+<div id="zoom-group" class="btn-group-vertical">
+  <button type="button" class="btn btn-secondary" (click)="zoomChange(1)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+  <button type="button" class="btn btn-secondary" (click)="zoomChange(0)"><i class="fa fa-minus" aria-hidden="true"></i></button>
+</div>

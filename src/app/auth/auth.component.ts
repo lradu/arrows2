@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpModule } from '@angular/http';
 
@@ -66,13 +66,11 @@ export class ResetpassComponent {
   public auth: any;
   public error: any;
 
-  constructor(private af: AngularFire, @Inject(FirebaseApp) firebase: any, private router: Router) {
+  constructor(private ref: ChangeDetectorRef, private af: AngularFire, @Inject(FirebaseApp) firebase: any, private router: Router) {
     this.auth = firebase.auth()
   }
 
   onSubmit(formData) {
-  	//todo
-  	// alert doesn't work well inside firebase calls
     if(formData.valid) {
       this.auth.sendPasswordResetEmail(formData.value.email)
       .then( 
@@ -83,6 +81,7 @@ export class ResetpassComponent {
       	(err) => {
           console.log(err);
           this.error = err.message;
+          this.ref.detectChanges();
         })
     }
   }

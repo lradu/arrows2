@@ -7,8 +7,7 @@ nav a {
 	cursor: pointer;
 }
 
-#zoom-group {
-	position: absolute;
-	padding: 20px;
+svg.graph {
+	width: 100%;
+	height: 100%;
 }
-

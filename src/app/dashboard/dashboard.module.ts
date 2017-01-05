@@ -6,8 +6,8 @@ import { AuthGuard } from '../auth/auth-guard.service';
 
 import { dashRouting } from './dashboard.routing';
 import { DashboardComponent } from './dashboard.component';
-import { ProfileComponent } from './profile.component';
-import { DiagramComponent } from './diagram.component';
+import { ProfileComponent } from './profile/profile.component';
+import { DiagramComponent } from './diagram/diagram.component';
 
 @NgModule({
   imports:      [ 

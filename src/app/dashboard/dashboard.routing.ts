@@ -2,8 +2,8 @@ import { ModuleWithProviders } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 import { DashboardComponent } from './dashboard.component';
-import { ProfileComponent } from './profile.component';
-import { DiagramComponent } from './diagram.component';
+import { ProfileComponent } from './profile/profile.component';
+import { DiagramComponent } from './diagram/diagram.component';
 import { AuthGuard } from '../auth/auth-guard.service';
 
 const appRoutes: Routes = [
