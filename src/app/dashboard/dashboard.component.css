@@ -1,0 +1,16 @@
+#diagrams {
+	padding: 15px;
+}
+
+#users {
+	padding: 15px;
+}
+
+@media (min-width: 992px) {
+	#diagrams {
+		min-width: 500px;
+	}
+	#users {
+		min-width: 500px;
+	}
+}

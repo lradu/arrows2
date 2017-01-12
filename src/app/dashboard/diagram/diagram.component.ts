@@ -1,7 +1,8 @@
-import { Component, Inject, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, Inject, ChangeDetectorRef, OnInit } from '@angular/core';
 import { AngularFire, FirebaseApp } from 'angularfire2';
 import * as d3 from 'd3'; 
 
+import { Model } from './graph/model';
 import { Node } from './graph/node';
 
 @Component({
@@ -12,24 +13,144 @@ import { Node } from './graph/node';
 
 export class DiagramComponent implements OnInit {
 	public svg: any;
+	public gNodes: any;
+	public gCaptions: any;
+	public gOverlay: any;
 	public zoom: any;
-	public g: any;
-	public showTools: boolean;
+	public model: Model;
 
-	constructor(private af: AngularFire) {
+	public dbref: any;
+	public user: any;
+	public currentDiagram: any;
+
+	public showTools: boolean;
+	public currentNode: any;
+
+	constructor(
+		private af: AngularFire, 
+		@Inject(FirebaseApp) firebase: any,
+		private ref: ChangeDetectorRef
+		) {
+			this.dbref = firebase.database().ref();
+			this.user = firebase.auth().currentUser;
 	}
 
 	ngOnInit(){
 		this.svg = d3.select("#diagram")
 			.append("svg")
 			.attr("class", "graph")
-		this.g = this.svg.append("g");
 		this.zoomEvent();
-		this.renderNodes();
+		this.gNodes = this.svg.append("g")
+			.attr("class", "layer nodes");
+		this.gCaptions = this.svg.append("g")
+			.attr("class", "caption");
+		this.gOverlay = this.svg.append("g")
+			.attr("class", "layer overlay")
+
+		this.model = new Model();
+
+		// let width = 1500 , height = 1000, radius = 50;
+		// this.nodes = d3.range(20).map(function() {
+		// 	let node = new Node();
+		// 	node.x = Math.round(Math.random() * (width - radius * 2) + radius);
+		// 	node.y = Math.round(Math.random() * (height - radius * 2) + radius)
+		//   return node;
+		// });
+
+		this.currentDiagram = "diagram1";
+		// this.dbref.child('users/' + this.user.uid + "/currentDiagram").once('value', snap)
+
+		this.dbref.child('diagrams/' + this.currentDiagram + '/data/nodes').on('value', (snapShot) => {
+			this.model.nodes = []
+			for(let key in snapShot.val()) {
+				this.model.nodes.push(snapShot.val()[key]);
+			}
+			d3.selectAll('svg > g > *').remove();
+			this.renderNodes();
+		});
+	}
+
+	renderNodes(){
+		let nodes = this.gNodes.selectAll("rect.node")
+		  .data(this.model.nodes)
+		nodes.exit().remove()
+		nodes.enter()
+			.append("rect")
+		  	.attr("class", "node")
+		   	.attr("width", function(node) { return node.radius * 2; })
+		   	.attr("height", function(node) { return node.radius * 2; })
+		   	.attr("x", function(node) { return node.x; })
+		   	.attr("y", function(node) { return node.y; })
+		   	.attr("rx", function(node) { return node.isRectangle ? 20 : node.radius })
+		   	.attr("ry", function(node) { return node.isRectangle ? 20 : node.radius })
+		   	.attr("fill", function(node) { return node.style.fill })
+		   	.attr("stroke", function(node) { return node.style.stroke })
+		   	.attr("stroke-width", function(node) { return node.style.strokeWidth })
+		   	.style("color", function(node) { return node.style.color });
+
+
+		let captions = this.gCaptions.selectAll("text.node.caption")
+			.data(this.model.nodes)
+		captions.exit().remove()
+		captions.enter()
+			.append("text")
+				.attr("x", function(node) { return node.x + node.radius; })
+				.attr("y", function(node) { return node.y + node.radius; })
+				.attr("fill", function(node) { return node.style.color })
+				.attr("class", "node caption")
+				.attr("text-anchor", "middle")
+				.attr("font-size",  "50px")
+				.attr("alignment-baseline", "central")
+				.text(function(node) { return node.caption; })
+				.on('click', function(node) { console.log(this.getComputedTextLength());});
+
+
+
+		let overlays = this.gOverlay.selectAll("rect.node")
+			.data(this.model.nodes)
+		overlays.exit().remove()
+		overlays.enter()
+			.append("rect")
+				.attr("class", "node")
+				.attr("width", function(node) { return node.radius * 2 + 4; })
+				.attr("height", function(node) { return node.radius * 2 + 4; })
+				.attr("x", function(node) { return node.x - 2; })
+				.attr("y", function(node) { return node.y - 2; })
+				.attr("rx", function(node) { return node.isRectangle ? 22 : node.radius + 2 })
+				.attr("ry", function(node) { return node.isRectangle ? 22 : node.radius + 2 })
+			  .style("fill", "rgba(255, 255, 255, 0)")
+			  .on("mouseover", mOver)
+			  .on("mouseleave", mLeave)
+			  .on("dblclick", (node) => {
+			   	this.currentNode = node;
+			  	this.showTools = true;
+			  	this.ref.detectChanges();
+			   })
+			  .call(d3.drag()
+			     .on("drag", dragged));
+
+		function mOver(){
+			d3.select(this).style("fill", "rgba(150, 150, 255, 0.6)");
+		}
+		function mLeave(){
+			d3.select(this).style("fill", "rgba(255, 255, 255, 0)");
+		}
+		let that = this;
+		function dragged(node) {
+			// node.x = d3.event.x;
+			// node.y = d3.event.y;
+			//d3.select(this).attr("x", node.x = d3.event.x).attr("y", node.y = d3.event.y);
+
+			that.dbref.child('diagrams/' + that.currentDiagram + '/data/nodes/' + node.id).update({
+				"x": d3.event.x,
+				"y": d3.event.y
+			});
+		}
 	}
 
 	closeTools(){
 		this.showTools = false;
+		this.ref.detectChanges();
 	}
 
 	zoomEvent() {
@@ -42,7 +163,7 @@ export class DiagramComponent implements OnInit {
 			.on("dblclick.zoom", null);
 
     function zoomed() {
-        d3.select("g").attr("transform", d3.event.transform);
+        d3.selectAll("g").attr("transform", d3.event.transform);
     }
 
 	}
@@ -58,46 +179,23 @@ export class DiagramComponent implements OnInit {
 
 	}
 
-	renderNodes(){
-		let width = 1500 , height = 1000, radius = 32;
-		let rects = d3.range(20).map(function() {
-			let node = new Node();
-			node.x = Math.round(Math.random() * (width - radius * 2) + radius);
-			node.y = Math.round(Math.random() * (height - radius * 2) + radius)
-		  return node;
-		});
-
-		let color = d3.scaleOrdinal()
-		    .range(d3.schemeCategory20);
-
-		this.g.selectAll("rect")
-		  .data(rects)
-		  .enter().append("rect")
-		    .attr("x", function(d) { return d.x; })
-		    .attr("y", function(d) { return d.y; })
-		   	.attr("width", 50)
-		   	.attr("height", 50)
-		   	.attr("rx",25)
-		   	.attr("rx",25)
-		    .style("fill", function(d, i) { return color(i); })
-		    .on("dblclick", (node) => {
-		    	this.showTools = true;
-		     })
-		    .call(d3.drag()
-		        .on("start", dragstarted)
-		        .on("drag", dragged)
-		        .on("end", dragended));
-
-		function dragstarted(d) {
-		  d3.select(this).raise().classed("active", true);
+	saveNode() {
+		if(this.currentNode.caption) {
+			let g = this.svg.append("g");
+			let txt = g.append("text")
+				.attr("font-size",  "50px")
+				.text(this.currentNode.caption)
+			this.currentNode.radius = (txt.node().getComputedTextLength() / 2) + 20;
+			g.remove();
+		} else {
+			this.currentNode.radius = 50;
 		}
 
-		function dragged(d) {
-		  d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
-		}
+		this.dbref.child('diagrams/' + this.currentDiagram + '/data/nodes/' + this.currentNode.id).update(this.currentNode);
+		this.ref.detectChanges();
+	}
 
-		function dragended(d) {
-		  d3.select(this).classed("active", false);
-		}
+	deleteNode() {
+		this.dbref.child('diagrams/' + this.currentDiagram + '/data/nodes/' + this.currentNode.id).remove();
 	}
 }

@@ -1,23 +1,34 @@
 export class Node {
+	public id: any;
 	public x: number;
 	public y: number;
-	public classes: any;
+	public radius: number;
+	public style: any;
 	public properties: any;
 	public isRectangle: boolean;
 
 	constructor() {
-		this.x = 5;
-		this.y = 5;
+		this.x = 100;
+		this.y = 100;
+		this.id = 0;
+		this.isRectangle = false;
+		this.radius = 50;
+		this.style = {
+			"color": "black",
+			"fill": "white",
+			"stroke": "#333333",
+			"strokeWidth": "4"
+		}
 	}
 
-	distanceTo(node) {
+	public distanceTo(node) {
 		let dx = node.x - this.x;
 		let dy = node.y - this.y;
 
 		return Math.sqrt(dx * dx + dy * dy);
 	}
 
-	angleTo(node) {
+	public angleTo(node) {
 		let dx = node.x - this.x;
 		let dy = node.y - this.y;
 
