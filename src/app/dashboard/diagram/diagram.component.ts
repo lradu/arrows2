@@ -57,17 +57,25 @@ export class DiagramComponent implements OnInit {
 		//   return node;
 		// });
 
-		this.currentDiagram = "diagram1";
-		// this.dbref.child('users/' + this.user.uid + "/currentDiagram").once('value', snap)
-
-		this.dbref.child('diagrams/' + this.currentDiagram + '/data/nodes').on('value', (snapShot) => {
-			this.model.nodes = []
-			for(let key in snapShot.val()) {
-				this.model.nodes.push(snapShot.val()[key]);
-			}
-			d3.selectAll('svg > g > *').remove();
-			this.renderNodes();
-		});
+		this.dbref
+			.child('users/' + this.user.uid + "/currentDiagram")
+			.on('value',
+				(snap) => {
+					this.currentDiagram = snap.val();
+					this.showTools = false;
+					this.dbref
+						.child('diagrams/' + this.currentDiagram + '/data/nodes')
+						.on('value', (snapShot) => {
+							if(snapShot.ref.parent.parent.key == this.currentDiagram){
+								this.model.nodes = []
+								for(let key in snapShot.val()) {
+									this.model.nodes.push(snapShot.val()[key]);
+								}
+								d3.selectAll('svg > g > *').remove();
+								this.renderNodes();
+						}
+					}); 
+			})
 	}
 
 	renderNodes(){
@@ -102,7 +110,6 @@ export class DiagramComponent implements OnInit {
 				.attr("font-size",  "50px")
 				.attr("alignment-baseline", "central")
 				.text(function(node) { return node.caption; })
-				.on('click', function(node) { console.log(this.getComputedTextLength());});
 
 
 
@@ -141,7 +148,9 @@ export class DiagramComponent implements OnInit {
 			// node.y = d3.event.y;
 			//d3.select(this).attr("x", node.x = d3.event.x).attr("y", node.y = d3.event.y);
 
-			that.dbref.child('diagrams/' + that.currentDiagram + '/data/nodes/' + node.id).update({
+			that.dbref
+				.child('diagrams/' + that.currentDiagram + '/data/nodes/' + node.id)
+				.update({
 				"x": d3.event.x,
 				"y": d3.event.y
 			});
@@ -191,11 +200,22 @@ export class DiagramComponent implements OnInit {
 			this.currentNode.radius = 50;
 		}
 
-		this.dbref.child('diagrams/' + this.currentDiagram + '/data/nodes/' + this.currentNode.id).update(this.currentNode);
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/nodes/' + this.currentNode.id)
+			.update({
+				"caption": this.currentNode.caption,
+				"isRectangle": this.currentNode.isRectangle,
+				"radius": this.currentNode.radius,
+				"style": this.currentNode.style
+			});
 		this.ref.detectChanges();
 	}
 
 	deleteNode() {
-		this.dbref.child('diagrams/' + this.currentDiagram + '/data/nodes/' + this.currentNode.id).remove();
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/nodes/' + this.currentNode.id)
+			.remove();
+		this.showTools = false;
+		this.ref.detectChanges();
 	}
 }

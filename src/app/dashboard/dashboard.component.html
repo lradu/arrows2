@@ -2,8 +2,16 @@
   <button class="navbar-toggler hidden-lg-up" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"></button>
   <div class="collapse navbar-toggleable-md" id="navbarResponsive">
     <ul class="nav navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link">{{ title }}</a>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ title }}</a>
+        <div class="dropdown-menu"  aria-labelledby="responsiveNavbarDropdown" id="diagram-title">
+          <div class="input-group">
+            <input type="email" class="form-control" [value]="title" #titleInput>
+            <span class="input-group-btn">
+              <button class="btn btn-primary" type="button" (click)="changeTitle(titleInput.value)">Change</button>
+            </span>
+          </div>
+        </div>
       </li>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-list-alt" aria-hidden="true"></i> </a>
@@ -11,29 +19,45 @@
           <div class="col-sm-8">
             <div class="input-group mb-2">
                 <div class="input-group-addon"><i class="fa fa-search" aria-hidden="true"></i></div>
-                <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="Search">
+                <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="Search" #filterInput (keyup)="filterDiagrams(filterInput.value)">
             </div>
           </div>
           <div class="col-sm-4">
-            <button type="button" class="btn btn-secondary float-sm-right"><i class="fa fa-plus" aria-hidden="true"></i> Diagram</button>
+            <button type="button" class="btn btn-secondary float-sm-right" (click)='newDiagram()'><i class="fa fa-plus" aria-hidden="true"></i> Diagram</button>
           </div>
-          <table class="table table-hover">
+          <table class="table table-hover" id="diagrams-table">
             <thead>
               <tr>
-                <th>Access</th>
-                <th>Name</th>
-                <th>Created</th>
-                <th>Last Update</th>
-                <th></th>
+                <th (click)='sortDiagrams("access", !asc)'>
+                  <i class="fa fa-arrow-down" aria-hidden="true" *ngIf='col=="access" && !asc'></i>
+                  <i class="fa fa-arrow-up" aria-hidden="true" *ngIf='col=="access" && asc'></i> 
+                  Access
+                </th>
+                <th (click)='sortDiagrams("title", !asc)'>
+                  <i class="fa fa-arrow-down" aria-hidden="true" *ngIf='col=="title" && !asc'></i>
+                  <i class="fa fa-arrow-up" aria-hidden="true" *ngIf='col=="title" && asc'></i>
+                  Name
+                </th>
+                <th (click)='sortDiagrams("created", !asc)'>
+                  <i class="fa fa-arrow-down" aria-hidden="true" *ngIf='col=="created" && !asc'></i>
+                  <i class="fa fa-arrow-up" aria-hidden="true" *ngIf='col=="created" && asc'></i>
+                  Created
+                </th>
+                <th (click)='sortDiagrams("lastUpdate", !asc)'>
+                  <i class="fa fa-arrow-down" aria-hidden="true" *ngIf='col=="lastUpdate" && !asc'></i>
+                  <i class="fa fa-arrow-up" aria-hidden="true" *ngIf='col=="lastUpdate" && asc'></i>
+                  Last Update
+                </th>
+                <th ></th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Info</td>
-                <td>Info</td>
-                <td>Info</td>
-                <td>Info</td>
-                <td><i class="fa fa-times" aria-hidden="true"></i></td>
+              <tr *ngFor='let d of diagrams' (click)="changeDiagram(d.key);" >
+                <td *ngIf='!d.hide'>{{ d.access }}</td>
+                <td *ngIf='!d.hide'>{{ d.title }}</td>
+                <td *ngIf='!d.hide'>{{ d.created }}</td>
+                <td *ngIf='!d.hide'>{{ d.lastUpdate }}</td>
+                <td *ngIf='!d.hide'><i class="fa fa-times" aria-hidden="true" (click)="onEvent($event); removeDiagram(d.key, d.access);"></i></td>
               </tr>
             </tbody>
           </table>
@@ -42,12 +66,12 @@
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-share-square-o" aria-hidden="true"></i> Share</a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="users" (click)="onEvent($event)">
-          <div class="col-lg-12 mb-2">
+          <div class="col-lg-10 mb-2">
               <div class="input-group">
-                <input type="text" class="form-control" placeholder="Email">
+                <input type="email" class="form-control" placeholder="Email">
                 <span class="input-group-btn">
                 <select class="custom-select btn">
-                  <option selected>Owner</option>
+                  <option>Owner</option>
                   <option>Editor</option>
                   <option>Read Only</option>
                 </select>
@@ -66,11 +90,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Info</td>
-                <td>Info</td>
-                <td>Info</td>
-                <td>Info</td>
+              <tr *ngFor='let d of users'>
+                <td>{{ d.access }}</td>
+                <td>{{ d.email }}</td>
+                <td>{{ d.dateAdded }}</td>
+                <td>{{ d.lastUpdate }}</td>
                 <td><i class="fa fa-times" aria-hidden="true"></i></td>
               </tr>
             </tbody>

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { HttpModule } from '@angular/http';
 
 import { AngularFire, FirebaseApp } from 'angularfire2';
+import { Node } from '../dashboard/diagram/graph/node';
 
 @Component({
   templateUrl: './signup.component.html'
@@ -10,8 +11,16 @@ import { AngularFire, FirebaseApp } from 'angularfire2';
 
 export class SignupComponent {
 	public error: any;
+  public f: any;
+  public date: string;
 
-  constructor(private af: AngularFire, private router: Router) {}
+  constructor(
+    private af: AngularFire,
+    @Inject(FirebaseApp) firebase: any, 
+    private router: Router) {
+    this.f = firebase;
+    this.date = new Date().toLocaleDateString();
+  }
 
   onSubmit(formData) {
   	if(formData.valid) {
@@ -21,13 +30,62 @@ export class SignupComponent {
   		}).then(
   			(success) => {
   				console.log(success);
-  				this.router.navigate(['/dashboard']);
+          this.createUserData();
   		}).catch(
   			(err) => {
   				console.log(err);
   				this.error = err.message;
   		})
   	}
+  }
+
+  createUserData(){
+    let node = new Node();
+    let user = this.f.auth().currentUser;
+    console.log(node, user.uid);
+    this.f
+      .database()
+      .ref('diagrams/')
+      .push({
+      "data": {
+        "nodes": {
+          "0": node
+        }
+      },
+      "info" : {
+        "created" : this.date,
+        "lastUpdate" : this.date,
+        "title" : "My new diagram"
+      },
+      "users" : {
+        [user.uid] : {
+          "access" : "Owner",
+          "dateAdded" : this.date,
+          "email" : user.email,
+          "lastUpdate" : this.date
+        }
+      }
+    }).then(
+      (newD) => {
+        this.f
+          .database()
+          .ref('users/' + user.uid)
+          .update({
+            "currentDiagram": newD.key,
+            "sortAccess": {
+              "asc": true,
+              "col": "title"
+            },
+            "diagrams": {
+              [newD.key]: true
+            }
+        }).then(
+          (s) => {
+            this.router.navigate(['/dashboard']);
+          }
+        );
+      }
+    );
   }
 }
 

@@ -1,16 +1,20 @@
-#diagrams {
-	padding: 15px;
+#diagrams-table  {
+	cursor: pointer;
 }
-
+ 
+#diagrams,
 #users {
 	padding: 15px;
 }
 
 @media (min-width: 992px) {
-	#diagrams {
-		min-width: 500px;
-	}
+	#diagrams, 
 	#users {
-		min-width: 500px;
+		min-width: 600px;
+	}
+
+	#diagram-title {
+		padding: 10px;
+		min-width: 300px;
 	}
 }
