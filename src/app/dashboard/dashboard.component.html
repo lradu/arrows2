@@ -4,7 +4,7 @@
     <ul class="nav navbar-nav">
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ title }}</a>
-        <div class="dropdown-menu"  aria-labelledby="responsiveNavbarDropdown" id="diagram-title">
+        <div class="dropdown-menu"  aria-labelledby="responsiveNavbarDropdown" id="diagram-title" *ngIf='access!="Read Only"'>
           <div class="input-group">
             <input type="email" class="form-control" [value]="title" #titleInput>
             <span class="input-group-btn">
@@ -66,18 +66,21 @@
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-share-square-o" aria-hidden="true"></i> Share</a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="users" (click)="onEvent($event)">
-          <div class="col-lg-10 mb-2">
+          <div class="col-lg-10 mb-2" *ngIf='access=="Owner"'>
               <div class="input-group">
-                <input type="email" class="form-control" placeholder="Email">
+                <input type="email" class="form-control" placeholder="Email" #emailInput>
                 <span class="input-group-btn">
-                <select class="custom-select btn">
+                <select class="custom-select btn" #accessInput>
                   <option>Owner</option>
                   <option>Editor</option>
                   <option>Read Only</option>
                 </select>
-                  <button class="btn btn-primary" type="button">Invite</button>
+                  <button class="btn btn-primary" type="button" (click)='inviteUser(emailInput.value, accessInput.value)'>Invite</button>
                 </span>
               </div>
+          </div>
+          <div class="col-lg-10 alert alert-danger" role="alert" *ngIf="error">
+            {{ error }}
           </div>
           <table class="table table-hover">
             <thead>
@@ -95,7 +98,7 @@
                 <td>{{ d.email }}</td>
                 <td>{{ d.dateAdded }}</td>
                 <td>{{ d.lastUpdate }}</td>
-                <td><i class="fa fa-times" aria-hidden="true"></i></td>
+                <td *ngIf='access=="Owner" && users.length > 1'><i class="fa fa-times" aria-hidden="true" (click)="removeUser(d.email)"></i></td>
               </tr>
             </tbody>
           </table>
@@ -103,7 +106,7 @@
       </li>
     </ul>
     <ul class="nav navbar-nav float-lg-right">
-    	<li class="nav-item">
+    	<li class="nav-item" *ngIf='access!="Read Only"'>
     	  <a class="nav-link" (click)="newNode()"><i class="fa fa-plus-circle" aria-hidden="true"></i> Node</a>
     	</li>
     	<li class="nav-item dropdown">

@@ -21,7 +21,8 @@ export class DiagramComponent implements OnInit {
 
 	public dbref: any;
 	public user: any;
-	public currentDiagram: any;
+	public currentDiagram: string;
+	public access: string;
 
 	public showTools: boolean;
 	public currentNode: any;
@@ -63,6 +64,28 @@ export class DiagramComponent implements OnInit {
 				(snap) => {
 					this.currentDiagram = snap.val();
 					this.showTools = false;
+					this.dbref
+						.child('diagrams/' + this.currentDiagram + '/users/' + this.user.uid + '/access')
+						.on('value', (snapChild) => {
+							if(snapChild.val()){
+								this.access = snapChild.val();
+							} else {
+								//change currentDiagram if user doesn't have access
+								this.access = '';
+								snap.ref.parent
+									.child('diagrams')
+									.once('value',
+										(snapShot) => {
+											for(let key in snapShot.val()){
+												snap.ref.parent
+													.update({
+														"currentDiagram": key
+													});
+													break;
+											}
+										})
+							}
+						})
 					this.dbref
 						.child('diagrams/' + this.currentDiagram + '/data/nodes')
 						.on('value', (snapShot) => {
@@ -129,9 +152,11 @@ export class DiagramComponent implements OnInit {
 			  .on("mouseover", mOver)
 			  .on("mouseleave", mLeave)
 			  .on("dblclick", (node) => {
-			   	this.currentNode = node;
-			  	this.showTools = true;
-			  	this.ref.detectChanges();
+			  	if(this.access != "Read Only"){
+				   	this.currentNode = node;
+				  	this.showTools = true;
+				  	this.ref.detectChanges();
+			  	}
 			   })
 			  .call(d3.drag()
 			     .on("drag", dragged));
@@ -147,13 +172,14 @@ export class DiagramComponent implements OnInit {
 			// node.x = d3.event.x;
 			// node.y = d3.event.y;
 			//d3.select(this).attr("x", node.x = d3.event.x).attr("y", node.y = d3.event.y);
-
-			that.dbref
-				.child('diagrams/' + that.currentDiagram + '/data/nodes/' + node.id)
-				.update({
-				"x": d3.event.x,
-				"y": d3.event.y
-			});
+			if(that.access != "Read Only"){
+				that.dbref
+					.child('diagrams/' + that.currentDiagram + '/data/nodes/' + node.id)
+					.update({
+					"x": d3.event.x,
+					"y": d3.event.y
+				});
+			}
 		}
 	}
 

@@ -42,7 +42,6 @@ export class SignupComponent {
   createUserData(){
     let node = new Node();
     let user = this.f.auth().currentUser;
-    console.log(node, user.uid);
     this.f
       .database()
       .ref('diagrams/')
@@ -71,6 +70,7 @@ export class SignupComponent {
           .database()
           .ref('users/' + user.uid)
           .update({
+            "email": user.email,
             "currentDiagram": newD.key,
             "sortAccess": {
               "asc": true,

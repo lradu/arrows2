@@ -17,9 +17,11 @@ export class DashboardComponent {
 
 	public title: string;
 	public users: any;
+	public error: any;
 	public diagrams: any;
 	public diagramsKey: any;
-	public currentDiagram: any;
+	public currentDiagram: string;
+	public access: string;
 
 	public asc: boolean;
 	public col: string;
@@ -37,7 +39,6 @@ export class DashboardComponent {
 			this.diagrams = [];
 			this.date = new Date().toLocaleDateString();
 			this.loadData();
-		
 	}
 
 	loadData(){
@@ -91,6 +92,9 @@ export class DashboardComponent {
 								let edit = [];
 								let read = [];
 								for(let key in snapShot.val()) { //todo - improve this
+									if(key==this.user.uid){
+										this.access = snapShot.val()[key].access;
+									}
 									if(snapShot.val()[key].access == 'Owner'){
 										owner.push(snapShot.val()[key]);
 									} else if(snapShot.val()[key].access == 'Editor'){
@@ -102,7 +106,7 @@ export class DashboardComponent {
 									this.ref.detectChanges();
 								}
 							}
-						});
+						}); 
 				});
 	}
 
@@ -230,6 +234,62 @@ export class DashboardComponent {
 			.update({
 				"title": title
 			})
+	}
+
+	inviteUser(email, access){
+		console.log(email, access);
+		if(email == this.user.email){
+			this.error = "You cannot change your status.";
+			setTimeout(() => {
+				this.error = '';
+			}, 3000);
+		} else {
+			this.dbref
+				.child('users')
+				.orderByChild('email')
+				.equalTo(email)
+				.once('value',
+					(snap) => {
+						if(snap.val()){
+							snap.forEach((snapChild) =>{
+								snapChild.ref.child('diagrams').update({
+									[this.currentDiagram]: true
+								});
+								this.dbref
+									.child('diagrams/' + this.currentDiagram + '/users')
+									.update({
+										[snapChild.key]: {
+											"access": access,
+											"email": email,
+											"dateAdded": this.date,
+											"lastUpdate": this.date
+										}
+									});
+							});
+						} else {
+							this.error = "User doesn't exist.";
+							setTimeout(() => {
+								this.error = '';
+							}, 3000);
+							this.ref.detectChanges();
+						}
+					});
+		}
+	}
+
+	removeUser(email){
+		this.dbref
+			.child('users')
+			.orderByChild('email')
+			.equalTo(email)
+			.once('value',
+				(snap) => {
+					snap.forEach((snapChild) =>{
+						snapChild.ref.child('diagrams/' + this.currentDiagram).remove();
+						this.dbref
+							.child('diagrams/' + this.currentDiagram + '/users/' + snapChild.key).remove();
+					});
+				});
 	}
 
 	onEvent(event) {
