@@ -1,13 +1,19 @@
 export class Relationship {
-	public relationshipType: any;
-	public classes: any;
-	public properties: any;
-	public startNode: any;
-	public endNode: any;
+	public type: string;
+	public classes: string;
+	public properties: string;
+	public startNode: string;
+	public endNode: string;
 	public style: any;
 
-	constructor (){
-		
+	constructor (){ 
+		this.style = {
+			"fill": "#333333",
+		}
+		this.startNode = "";
+		this.endNode = "";
+		this.type = "";
+		this.properties = "";
 	}
 
 	public reverse() {

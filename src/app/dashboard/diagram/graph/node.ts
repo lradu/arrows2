@@ -4,6 +4,7 @@ export class Node {
 	public y: number;
 	public radius: number;
 	public style: any;
+	public caption: string;
 	public properties: any;
 	public isRectangle: boolean;
 
@@ -13,6 +14,8 @@ export class Node {
 		this.id = 0;
 		this.isRectangle = false;
 		this.radius = 50;
+		this.caption = "";
+		this.properties = "";
 		this.style = {
 			"color": "black",
 			"fill": "white",
@@ -22,15 +25,15 @@ export class Node {
 	}
 
 	public distanceTo(node) {
-		let dx = node.x - this.x;
-		let dy = node.y - this.y;
+		let dx = (node.x + node.radius) - (this.x + this.radius + 8);
+		let dy = (node.y + node.radius) - (this.y + this.radius + 8);
 
 		return Math.sqrt(dx * dx + dy * dy);
 	}
 
 	public angleTo(node) {
-		let dx = node.x - this.x;
-		let dy = node.y - this.y;
+		let dx = (node.x + node.radius) - (this.x + this.radius + 8);
+		let dy = (node.y + node.radius) - (this.y + this.radius + 8);
 
 		return Math.atan2(dy, dx) * 180 / Math.PI;
 	}
