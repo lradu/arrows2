@@ -153,7 +153,7 @@ export class DiagramComponent implements OnInit {
 			  .style("fill", "rgba(255, 255, 255, 0)")
 			  .on("mouseover", mOver)
 			  .on("mouseleave", mLeave)
-			  .on("dblclick", (node) => {
+			  .on("click", (node) => {
 			  	if(this.access != "Read Only"){
 				   	this.currentNode = node;
 				  	this.showTools = true;

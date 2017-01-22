@@ -2,18 +2,25 @@
 	position: absolute;
 	padding-left: 30px;
 	padding-right: 30px;
-	background-color: #f7f7f9;
+	background-color: white;
 	height: calc(100% - 60px);
 }
 
 #zoom-group {
-	position: absolute;
-	margin-top: 20px;
-	margin-left: 20px;
+	display: none;
 }
 
 #diagram {
 	position: absolute;
 	width: 100%;
 	height: calc(100% - 60px);
+}
+
+@media (min-width: 992px) {
+	#zoom-group {
+		display: flex;
+		position: absolute;
+		margin-top: 20px;
+		margin-left: 20px;
+	}
 }
