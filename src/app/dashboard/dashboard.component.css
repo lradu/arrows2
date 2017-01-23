@@ -8,6 +8,9 @@
 }
 
 @media (min-width: 992px) {
+	.navbar-brand {
+		display: none;
+	}
 	#diagrams, 
 	#users {
 		min-width: 600px;
