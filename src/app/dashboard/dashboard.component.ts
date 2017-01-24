@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 
 import { DiagramComponent } from './diagram/diagram.component';
 import { Node } from './diagram/graph/node';
+import * as edge from 'edge';
 
 @Component({
   selector: 'dashboard',
