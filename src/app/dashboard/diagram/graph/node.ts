@@ -1,5 +1,5 @@
 export class Node {
-	public id: any;
+	public id: string;
 	public x: number;
 	public y: number;
 	public radius: number;
@@ -11,7 +11,7 @@ export class Node {
 	constructor() {
 		this.x = 100;
 		this.y = 100;
-		this.id = 0;
+		this.id = "firstNode";
 		this.isRectangle = false;
 		this.radius = 50;
 		this.caption = "";
@@ -25,15 +25,15 @@ export class Node {
 	}
 
 	public distanceTo(node) {
-		let dx = (node.x + node.radius) - (this.x + this.radius + 8);
-		let dy = (node.y + node.radius) - (this.y + this.radius + 8);
+		let dx = (node.x + node.radius) - (this.x + this.radius);
+		let dy = (node.y + node.radius) - (this.y + this.radius);
 
 		return Math.sqrt(dx * dx + dy * dy);
 	}
 
 	public angleTo(node) {
-		let dx = (node.x + node.radius) - (this.x + this.radius + 8);
-		let dy = (node.y + node.radius) - (this.y + this.radius + 8);
+		let dx = (node.x + node.radius) - (this.x + this.radius);
+		let dy = (node.y + node.radius) - (this.y + this.radius);
 
 		return Math.atan2(dy, dx) * 180 / Math.PI;
 	}

@@ -48,7 +48,7 @@ export class SignupComponent {
       .push({
       "data": {
         "nodes": {
-          "0": node
+          "firstNode": node
         }
       },
       "info" : {

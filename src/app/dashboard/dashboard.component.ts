@@ -157,7 +157,7 @@ export class DashboardComponent {
 		this.dbref.child('diagrams/').push({
 			"data": {
 				"nodes": {
-					"0": node
+					"firstNode": node
 				}
 			},
 			"info" : {

@@ -27,7 +27,9 @@ export class DiagramComponent implements OnInit {
 	public access: string;
 
 	public showTools: boolean;
+	public showNodeTools: boolean;
 	public currentNode: any;
+	public currentR: any;
 
 	constructor(
 		private af: AngularFire, 
@@ -104,8 +106,23 @@ export class DiagramComponent implements OnInit {
 
 	renderNodes(){
 		let that = this;
+		let closestNode
 		let newNode = new Node();
-		let list = [];
+		this.gNodes.selectAll("rect.newNode")
+			.data([newNode])
+			.remove()
+			.enter()
+				.append("rect")
+					.attr("class", "newNode")
+					.attr("width", newNode.radius * 2)
+					.attr("height", newNode.radius * 2)
+					.attr("fill", "none");
+		this.gRelationships.selectAll("path.newRelationship")
+			.data([newNode])
+			.remove()
+			.enter()
+			.append("path")
+				.attr("class", "newRelationship");
 
 		let nodes = this.gNodes.selectAll("rect.node")
 		  .data(this.model.nodes)
@@ -156,6 +173,7 @@ export class DiagramComponent implements OnInit {
 			  .on("click", (node) => {
 			  	if(this.access != "Read Only"){
 				   	this.currentNode = node;
+				   	this.showNodeTools = true;
 				  	this.showTools = true;
 				  	this.ref.detectChanges();
 			  	}
@@ -195,9 +213,9 @@ export class DiagramComponent implements OnInit {
 					let target = that.model.nodes.find( x => x.id == rl.endNode)
 					let angle = source.angleTo(target);
 					return "translate("
-					+ (source.x + source.radius + 4)
+					+ (source.x + source.radius)
 					+ ","
-					+ (source.y + source.radius + 4)
+					+ (source.y + source.radius)
 					+ ")" + "rotate(" + angle + ")";
 				})
 				.attr("d", function(rl) {
@@ -213,7 +231,48 @@ export class DiagramComponent implements OnInit {
 					"L " + (source.radius + 12) + " -2.5" +
 					"Z";
 				})
-				.attr("fill", "#333333");
+				.attr("fill", function(rel) { return rel.style.fill });
+
+		let relOverlay = this.gOverlay.selectAll("path.relationship")
+			.data(this.model.relationships);
+		relOverlay.remove();
+		relOverlay.enter()
+			.append("path")
+				.attr("class", "relationship")
+				.attr("transform", function(rl) {
+					let source = that.model.nodes.find( x => x.id == rl.startNode)
+					let target = that.model.nodes.find( x => x.id == rl.endNode)
+					let angle = source.angleTo(target);
+					return "translate("
+					+ (source.x + source.radius)
+					+ ","
+					+ (source.y + source.radius)
+					+ ")" + "rotate(" + angle + ")";
+				})
+				.attr("d", function(rl) {
+					let source = that.model.nodes.find( x => x.id == rl.startNode)
+					let target = that.model.nodes.find( x => x.id == rl.endNode)
+					let distance = source.distanceTo(target) - target.radius - 34;
+					return "M " + (source.radius + 10) + " 7" + 
+					"L " + (distance - 3) + " 7" + 
+					"L " + (distance - 3) + " 16"  +
+					"L " + (distance + 26) + " 0" +
+					"L " + (distance - 3) + " -16" + 
+					"L " + (distance - 3) + " -7" + 
+					"L " + (source.radius + 12) + " -7" +
+					"Z";
+				})
+				.attr("fill", "rgba(255, 255, 255, 0)")
+				.on("mouseover", mOver)
+				.on("mouseleave", mLeave)
+				.on("click", (rl) => {
+			  	if(this.access != "Read Only"){
+				   	this.currentR = rl;
+				   	this.showNodeTools = false;
+				  	this.showTools = true;
+				  	this.ref.detectChanges();
+			  	}
+			   });
 
 		function mRingOver(){
 			d3.select(this).style("stroke", "rgba(150, 150, 255, 0.5)");
@@ -229,77 +288,88 @@ export class DiagramComponent implements OnInit {
 		}
 
 		function dragRing(n){
+			closestNode = "";
 			newNode.isRectangle = n.isRectangle;
 			newNode.style.fill = n.style.fill;
 			newNode.style.color = n.style.color;
 			newNode.x = d3.mouse(this)[0] - newNode.radius;
 			newNode.y = d3.mouse(this)[1] - newNode.radius;
-			list.push(newNode);
+
+			for(let node of that.model.nodes){
+				if(node.id != n.id){
+					if(node.distanceTo(newNode) <= node.radius + newNode.radius){
+						closestNode = node.id;
+						newNode.x = node.x + node.radius - newNode.radius;
+						newNode.y = node.y + node.radius - newNode.radius;
+					}
+				}
+			}
 
 			let distance = n.distanceTo(newNode) - newNode.radius - 34;
-			let news = that.gNodes.selectAll("rect.newNode")
-					.data(list);
-			news.remove();
-			news.enter()
-						.append("rect")
-					  	.attr("class", "newNode")
-					   	.attr("width", function(node) { return node.radius * 2; })
-					   	.attr("height", function(node) { return node.radius * 2; })
-					   	.attr("x", function(node) { return node.x; })
-					   	.attr("y", function(node) { return node.y; })
-					   	.attr("rx", function(node) { return node.isRectangle ? 20 : node.radius })
-					   	.attr("ry", function(node) { return node.isRectangle ? 20 : node.radius })
-					   	.attr("fill", function(node) { return node.style.fill })
-					   	.attr("stroke", function(node) { return node.style.stroke })
-					   	.attr("stroke-width", function(node) { return node.style.strokeWidth })
-					   	.style("color", function(node) { return node.style.color });
-
+			if(closestNode){
+				d3.select("rect.newNode")
+					.attr("fill", "none")
+					.attr("stroke", "none")
+					.style("color", "none");
+			} else {
+				d3.select("rect.newNode")
+					.attr("x", newNode.x)
+					.attr("y", newNode.y)
+					.attr("rx", newNode.isRectangle ? 20 : newNode.radius)
+					.attr("ry", newNode.isRectangle ? 20 : newNode.radius)
+					.attr("fill", newNode.style.fill)
+					.attr("stroke", newNode.style.stroke)
+					.attr("stroke-width", newNode.style.strokeWidth)
+					.style("color", newNode.style.color);
+			}
 			if(distance > n.radius){
-				let rel = that.gRelationships.selectAll("path.newRelationship")
-					.data(list);
-				rel.remove();
-				rel.enter()
-					.append("path")
-						.attr("class", "newRelationship")
-						.attr("transform", 
-							"translate(" 
-							+ (n.x + n.radius + 4)
-							+ ","
-							+ (n.y + n.radius + 4)
-							+ ")" + "rotate("
-							+ n.angleTo(newNode) + ")"
-							)
-						.attr("d", "M " + (n.radius + 12) + " 2.5" + 
-							"L " + distance + " 2.5" + 
-							"L " + distance + " 10"  +
-							"L " + (distance + 20) + " 0" +
-							"L " + distance + " -10" + 
-							"L " + distance + " -2.5" + 
-							"L " + (n.radius + 12) + " -2.5" +
-							"Z")
-						.attr("fill", "#333333");
+				d3.select("path.newRelationship")
+					.attr("transform", 
+						"translate(" 
+						+ (n.x + n.radius)
+						+ ","
+						+ (n.y + n.radius)
+						+ ")" + "rotate("
+						+ n.angleTo(newNode) + ")"
+						)
+					.attr("d", "M " + (n.radius + 12) + " 2.5" + 
+						"L " + distance + " 2.5" + 
+						"L " + distance + " 10"  +
+						"L " + (distance + 20) + " 0" +
+						"L " + distance + " -10" + 
+						"L " + distance + " -2.5" + 
+						"L " + (n.radius + 12) + " -2.5" +
+						"Z")
+					.attr("fill", "#333333");			
 			}
 		}
 
-		function dragEndRing(node){
+		function dragEndRing(n){
 			let newRelationship = new Relationship();
-			let getId = that.dbref
-				.child('diagrams/' + that.currentDiagram + '/data/nodes')
-				.push(newNode);
-			getId.ref.update({
-				"id": getId.key
-			});
-			newRelationship["startNode"] = node.id;
-			newRelationship["endNode"] = getId.key;
-			that.dbref
+			if(closestNode){
+				newRelationship["startNode"] = n.id;
+				newRelationship["endNode"] = closestNode;
+			} else {
+				let getId = that.dbref
+					.child('diagrams/' + that.currentDiagram + '/data/nodes')
+					.push(newNode);
+				getId.ref.update({
+					"id": getId.key
+				});
+				newRelationship["startNode"] = n.id;
+				newRelationship["endNode"] = getId.key;
+			}
+			let rel = that.dbref
 				.child('diagrams/' + that.currentDiagram + '/data/relationships/')
 				.push(newRelationship);
+			that.dbref
+				.child('diagrams/' + that.currentDiagram + '/data/relationships/' + rel.key)
+				.update({
+					"id": rel.key
+				})
 		}
 
 		function dragged(node) {
-			// node.x = d3.event.x;
-			// node.y = d3.event.y;
-			//d3.select(this).attr("x", node.x = d3.event.x).attr("y", node.y = d3.event.y);
 			if(that.access != "Read Only"){
 				that.dbref
 					.child('diagrams/' + that.currentDiagram + '/data/nodes/' + node.id)
@@ -391,5 +461,34 @@ export class DiagramComponent implements OnInit {
 			.remove();
 		this.showTools = false;
 		this.ref.detectChanges();
+	}
+
+	saveR(){
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)
+			.update({
+				"type": this.currentR.type,
+				"style": this.currentR.style
+			})
+	}
+
+	deleteR(){
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)
+			.remove();
+		this.showTools = false;
+		this.ref.detectChanges();
+	}
+
+	reverseR(){
+		let swap = this.currentR.startNode;
+		this.currentR.startNode = this.currentR.endNode;
+		this.currentR.endNode = swap;
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)
+			.update({
+				"startNode": this.currentR.startNode,
+				"endNode": this.currentR.endNode
+			});
 	}
 }

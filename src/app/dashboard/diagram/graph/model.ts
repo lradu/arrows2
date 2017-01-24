@@ -28,6 +28,7 @@ export class Model {
 		}
 		for(let key in data.relationships){
 			let relationship = new Relationship();
+			relationship.id = data.relationships[key].id;
 			relationship.style = data.relationships[key].style;
 			relationship.startNode = data.relationships[key].startNode;
 			relationship.endNode = data.relationships[key].endNode;

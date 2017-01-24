@@ -5,8 +5,10 @@ export class Relationship {
 	public startNode: string;
 	public endNode: string;
 	public style: any;
+	public id: string;
 
-	constructor (){ 
+	constructor (){
+		this.id = "firstRelationship"; 
 		this.style = {
 			"fill": "#333333",
 		}
