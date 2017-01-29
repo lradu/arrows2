@@ -10,6 +10,7 @@ import { AngularFire, FirebaseApp } from 'angularfire2';
 export class ProfileComponent { 
   public email: any;
   public auth: any;
+  public dbref: any;
   public emailSuccess: any;
   public passSuccess: any;
   public error: any;
@@ -17,12 +18,12 @@ export class ProfileComponent {
   constructor(private af: AngularFire,
     @Inject(FirebaseApp) firebase: any,
     private ref: ChangeDetectorRef) { 
+    this.dbref = firebase.database().ref();
     this.auth = firebase.auth().currentUser;
     this.email = this.auth.email;
   }
 
   onSubmit(formData) {
-    console.log(formData.value,this.auth.email);
     this.af.auth.login({
       email: this.auth.email,
       password: formData.value.pass
@@ -31,8 +32,22 @@ export class ProfileComponent {
         if(this.email != this.auth.email){
           this.auth.updateEmail(this.email)
             .then((success) => {
-              this.emailSuccess = "Email update successfully.";
-              this.ref.detectChanges();
+              this.dbref
+                .child("users/" + this.auth.uid + "/diagrams")
+                .once('value', (snap) => {
+                  let diagrams = Object.keys(snap.val());
+                  let updateObj = {};
+                  diagrams.forEach(key =>{
+                    updateObj["diagrams/" + key + "/users/" + this.auth.uid + '/email'] = this.email;
+                  });
+                  updateObj["users/" + this.auth.uid + "/email"] = this.email;
+                  this.dbref
+                    .update(updateObj)
+                    .then((success) => {
+                      this.emailSuccess = "Email update successfully.";
+                      this.ref.detectChanges();
+                    })
+                });
             }).catch((err) => {
               this.error = err.message;
               this.ref.detectChanges();

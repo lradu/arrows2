@@ -1,17 +1,18 @@
 <div id="diagram">
 </div>
 <div id="tools" class="col-lg-3 col-md-4 col-xs-12 offset-lg-9 offset-md-8" *ngIf="showTools">
+	<div class="form-group row" >
+		<a (click)="closeTools()" style="font-size: 1.4em; cursor: pointer;"><i class="fa fa-times-circle-o" aria-hidden="true"></i></a>
+	</div>
+	<!-- Edit Node -->
 	<form name="form" (ngSubmit)="saveNode()" *ngIf="showNodeTools">
-		<div class="form-group row" >
-			<a (click)="closeTools()" style="font-size: 1.4em;"><i class="fa fa-times-circle-o" aria-hidden="true"></i></a>
-		</div>
 	  <div class="form-group">
 	    <label for="caption">Caption</label>
 	    <input type="text" class="form-control" id="caption" [(ngModel)]="currentNode.caption" name="caption">
 	  </div>
 	  <div class="form-group">
 	    <label for="properties">Properties</label>
-	    <textarea class="form-control" id="properties" rows="6" [(ngModel)]="currentNode.properties" name="properties"></textarea>
+	    <textarea class="form-control" id="properties" rows="6" [(ngModel)]="currentNode.properties.text" name="properties"></textarea>
 	  </div>
 	  <div class="form-group">
 	  	<div class="btn-group" data-toggle="buttons">
@@ -40,14 +41,12 @@
 	    </div>
 	  </div>
 	  <div class="form-group">
-	  	<button type="submit" class="btn btn-primary">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
-	  	<button type="button" class="btn btn-danger float-xs-right" (click)="deleteNode()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
+	  	<button type="button" class="btn btn-danger" (click)="deleteNode()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
+	  	<button type="submit" class="btn btn-primary float-right">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
 	  </div>
 	</form>
+	<!-- Edit Relationship -->
 	<form name="rForm" (ngSubmit)="saveR()" *ngIf="!showNodeTools">
-		<div class="form-group row" >
-			<a (click)="closeTools()" style="font-size: 1.4em;"><i class="fa fa-times-circle-o" aria-hidden="true"></i></a>
-		</div>
 		<div class="form-group">
 			<button type="button" class="btn btn-secondary" (click)="reverseR()">Reverse <i class="fa fa-retweet" aria-hidden="true"></i></button>
 		</div>
@@ -57,7 +56,7 @@
 	  </div>
 	  <div class="form-group">
 	    <label for="properties">Properties</label>
-	    <textarea class="form-control" id="properties" rows="6" [(ngModel)]="currentR.properties" name="properties"></textarea>
+	    <textarea class="form-control" id="properties" rows="6" [(ngModel)]="currentR.properties.text" name="properties"></textarea>
 	  </div>
 	 	<div class="form-group">
 	    <div class="input-group">
@@ -68,11 +67,12 @@
 	    </div>
 	  </div>
 	  <div class="form-group">
-	  	<button type="submit" class="btn btn-primary">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
-	  	<button type="button" class="btn btn-danger float-xs-right" (click)="deleteR()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
+	  	<button type="button" class="btn btn-danger" (click)="deleteR()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
+	  	<button type="submit" class="btn btn-primary float-right">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
 	  </div>
 	</form>
 </div>
+<!-- Zoom buttons -->
 <div id="zoom-group" class="btn-group-vertical">
   <button type="button" class="btn btn-secondary" (click)="zoomChange(1)"><i class="fa fa-plus" aria-hidden="true"></i></button>
   <button type="button" class="btn btn-secondary" (click)="zoomChange(0)"><i class="fa fa-minus" aria-hidden="true"></i></button>

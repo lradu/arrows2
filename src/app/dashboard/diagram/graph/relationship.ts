@@ -1,7 +1,7 @@
 export class Relationship {
 	public type: string;
 	public classes: string;
-	public properties: string;
+	public properties: any;
 	public startNode: string;
 	public endNode: string;
 	public style: any;
@@ -15,7 +15,10 @@ export class Relationship {
 		this.startNode = "";
 		this.endNode = "";
 		this.type = "";
-		this.properties = "";
+		this.properties = {
+			"width": 50,
+			"text": ""
+		};
 	}
 
 	public reverse() {

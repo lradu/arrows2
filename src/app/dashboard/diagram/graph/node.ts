@@ -15,7 +15,10 @@ export class Node {
 		this.isRectangle = false;
 		this.radius = 50;
 		this.caption = "";
-		this.properties = "";
+		this.properties = {
+			"width": 50,
+			"text": ""
+		};
 		this.style = {
 			"color": "black",
 			"fill": "white",

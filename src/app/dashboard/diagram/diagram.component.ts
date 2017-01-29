@@ -24,12 +24,12 @@ export class DiagramComponent implements OnInit {
 	public dbref: any;
 	public user: any;
 	public currentDiagram: string;
+	public currentNode: any;
+	public currentR: any;
 	public access: string;
 
 	public showTools: boolean;
 	public showNodeTools: boolean;
-	public currentNode: any;
-	public currentR: any;
 
 	constructor(
 		private af: AngularFire, 
@@ -43,7 +43,7 @@ export class DiagramComponent implements OnInit {
 	ngOnInit(){
 		this.svg = d3.select("#diagram")
 			.append("svg")
-			.attr("class", "graph")
+				.attr("class", "graph");
 		this.zoomEvent();
 		this.gRelationships = this.svg.append("g")
 			.attr("class", "layer relationships");
@@ -53,17 +53,12 @@ export class DiagramComponent implements OnInit {
 			.attr("class", "caption");
 		this.gOverlay = this.svg.append("g")
 			.attr("class", "layer overlay");
-
 		this.model = new Model();
+		this.loadData();
+	}
 
-		// let width = 1500 , height = 1000, radius = 50;
-		// this.nodes = d3.range(20).map(function() {
-		// 	let node = new Node();
-		// 	node.x = Math.round(Math.random() * (width - radius * 2) + radius);
-		// 	node.y = Math.round(Math.random() * (height - radius * 2) + radius)
-		//   return node;
-		// });
-
+	loadData(){
+		let zoomFit = true;
 		this.dbref
 			.child('users/' + this.user.uid + "/currentDiagram")
 			.on('value',
@@ -99,11 +94,20 @@ export class DiagramComponent implements OnInit {
 								this.model.load(snapShot.val());
 								d3.selectAll('svg > g > *').remove();
 								this.renderNodes();
+								if(zoomFit){
+									this.zoomFit();
+									zoomFit = false;
+								}
 						}
 					}); 
 			})
 	}
 
+	/*
+
+		Render
+		
+	*/
 	renderNodes(){
 		let that = this;
 		let closestNode
@@ -140,6 +144,44 @@ export class DiagramComponent implements OnInit {
 		   	.attr("stroke", function(node) { return node.style.stroke })
 		   	.attr("stroke-width", function(node) { return node.style.strokeWidth })
 		   	.style("color", function(node) { return node.style.color });
+		nodes.enter()
+			.append("path")
+				.attr("transform", function(node) {
+					return "translate("
+					+ (node.x + 2 * node.radius)
+					+ ","
+					+ (node.y + node.radius)
+					+ ")";
+				})
+				.attr("d", function(node){
+					if(node.properties.text){
+						return "M 0 0" +
+						"L 20 -10" +
+						"L 20 -25" +
+						"A 10 10 0 0 1 30 -35" +
+			 			"L " + (node.properties.width * 2)  + " -35" +
+						"A 10 10 0 0 1 " + (node.properties.width * 2 + 10) + " -25" +
+						"L " + (node.properties.width * 2 + 10) + " 25" +
+						"A 10 10 0 0 1 " + (node.properties.width * 2) + " 35" +
+						"L 30 35" +
+						"A 10 10 0 0 1 20 25" +
+						"L 20 10" +
+						"Z"
+					}
+				})
+				.attr("fill", "white")
+				.attr("stroke", "black")
+				.attr("stroke-width", 2);
+		nodes.enter()
+			.append("text")
+				.attr("x", function(node) { return (node.x + 2 * node.radius + node.properties.width + 10); })
+				.attr("y", function(node) { return node.y + node.radius; })
+				.attr("fill", function(node) { return node.style.color })
+				.attr("class", "node-properties-text")
+				.attr("text-anchor", "middle")
+				.attr("font-size",  "50px")
+				.attr("alignment-baseline", "central")
+				.text(function(node) { return node.properties.text; })
 
 		let captions = this.gCaptions.selectAll("text.node.caption")
 			.data(this.model.nodes)
@@ -232,6 +274,24 @@ export class DiagramComponent implements OnInit {
 					"Z";
 				})
 				.attr("fill", function(rel) { return rel.style.fill });
+		// rel.enter()
+		// 	.append("text")
+		// 		.attr("transform", function(rl) {
+		// 			let source = that.model.nodes.find( x => x.id == rl.startNode)
+		// 			let target = that.model.nodes.find( x => x.id == rl.endNode)
+		// 			let angle = source.angleTo(target);
+		// 			return "translate("
+		// 			+ ((source.x + source.radius + target.x + target.radius) / 2 + 25)
+		// 			+ ","
+		// 			+ ((source.y + source.radius + target.y + target.radius) / 2)
+		// 			+ ")" + "rotate(" + angle + ")";
+		// 		})
+		// 		.attr("fill", function(rl) { return rl.style.fill })
+		// 		.attr("class", "node-properties-text")
+		// 		.attr("text-anchor", "middle")
+		// 		.attr("font-size",  "50px")
+		// 		.attr("alignment-baseline", "central")
+		// 		.text(function(rl) { return rl.type; })
 
 		let relOverlay = this.gOverlay.selectAll("path.relationship")
 			.data(this.model.relationships);
@@ -253,7 +313,7 @@ export class DiagramComponent implements OnInit {
 					let source = that.model.nodes.find( x => x.id == rl.startNode)
 					let target = that.model.nodes.find( x => x.id == rl.endNode)
 					let distance = source.distanceTo(target) - target.radius - 34;
-					return "M " + (source.radius + 10) + " 7" + 
+					return "M " + (source.radius + 12) + " 7" + 
 					"L " + (distance - 3) + " 7" + 
 					"L " + (distance - 3) + " 16"  +
 					"L " + (distance + 26) + " 0" +
@@ -381,14 +441,24 @@ export class DiagramComponent implements OnInit {
 		}
 	}
 
+	/*
+
+		Tools
+		
+	*/
 	closeTools(){
 		this.showTools = false;
 		this.ref.detectChanges();
 	}
 
+	/*
+
+		Zoom
+		
+	*/
 	zoomEvent() {
 		this.zoom = d3.zoom()
-      .scaleExtent([1/4, 10])
+      .scaleExtent([1/10, 10])
       .on("zoom", zoomed);
 
 		this.svg.call(this.zoom)
@@ -398,30 +468,57 @@ export class DiagramComponent implements OnInit {
     function zoomed() {
         d3.selectAll("g").attr("transform", d3.event.transform);
     }
+	}
 
+	zoomFit(){
+    let gNodes = this.gNodes.node().getBBox();
+  	let svg = this.svg.node();
+  	let fullWidth = svg.clientWidth,
+  	    fullHeight = svg.clientHeight;
+  	let width = gNodes.width,
+  	    height = gNodes.height;
+  	let midX = gNodes.x + width / 2,
+  	    midY = gNodes.y + height / 2;
+
+  	if (width == 0 || height == 0) { return; }
+
+  	let scale = 0.95 / Math.max(width / fullWidth, height / fullHeight);
+  	let tx = fullWidth / 2 - scale * midX,
+  			ty = fullHeight / 2 - scale * midY;
+  	let t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+  	this.svg
+  		.transition()
+  		.call(this.zoom.transform, t);
 	}
 
 	zoomChange(val) {
 		if(val) {
-			this.svg.transition()
+			this.svg
+				.transition()
 				.call(this.zoom.scaleBy, 1.2);
 		} else {
-			this.svg.transition()
+			this.svg
+				.transition()
 				.call(this.zoom.scaleBy, 0.8);
 		}
-
 	}
 
+	/*
+
+		Node
+
+	*/
 	saveNode() {
-		if(this.currentNode.caption) {
-			let g = this.svg.append("g");
-			let txt = g.append("text")
-				.attr("font-size",  "50px")
-				.text(this.currentNode.caption)
-			this.currentNode.radius = (txt.node().getComputedTextLength() / 2) + 20;
-			g.remove();
-		} else {
-			this.currentNode.radius = 50;
+		let g = this.svg.append("g");
+		let txt = g.append("text")
+			.attr("font-size",  "50px");
+		this.currentNode.radius = getTxtLength(this.currentNode.caption);
+		this.currentNode.properties.width = getTxtLength(this.currentNode.properties.text);
+		g.remove();
+		function getTxtLength(t){
+			txt.text(t);
+			let size = txt.node().getComputedTextLength() / 2 + 20;
+			return size < 50 ? 50:size;
 		}
 
 		this.dbref
@@ -430,8 +527,10 @@ export class DiagramComponent implements OnInit {
 				"caption": this.currentNode.caption,
 				"isRectangle": this.currentNode.isRectangle,
 				"radius": this.currentNode.radius,
-				"style": this.currentNode.style
+				"style": this.currentNode.style,
+				"properties": this.currentNode.properties
 			});
+		this.showTools = false;
 		this.ref.detectChanges();
 	}
 
@@ -463,6 +562,12 @@ export class DiagramComponent implements OnInit {
 		this.ref.detectChanges();
 	}
 
+
+	/*
+
+		Relationship
+
+	*/
 	saveR(){
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)
@@ -470,6 +575,8 @@ export class DiagramComponent implements OnInit {
 				"type": this.currentR.type,
 				"style": this.currentR.style
 			})
+		this.showTools = false;
+		this.ref.detectChanges();
 	}
 
 	deleteR(){
