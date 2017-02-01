@@ -77,3 +77,11 @@
   <button type="button" class="btn btn-secondary" (click)="zoomChange(1)"><i class="fa fa-plus" aria-hidden="true"></i></button>
   <button type="button" class="btn btn-secondary" (click)="zoomChange(0)"><i class="fa fa-minus" aria-hidden="true"></i></button>
 </div>
+<div id="ut-group" class="btn-group-vertical">
+  <button type="button" class="btn btn-secondary" (click)="zoomFit()"><i class="fa fa-crosshairs" aria-hidden="true"></i></button>
+  <button type="button" class="btn btn-secondary" (click)="lockMirrorNode()" style="padding: 8px;">
+  	<div id="mirrorNode" [style.color]="mirrorNode.color" [style.border-radius]="mirrorNode.isRectangle ? '5px':'14px'" [style.background-color]="mirrorNode.fill">
+  		<i [class]="mirrorNode.isLocked ? 'fa fa-lock':'fa fa-unlock-alt'" aria-hidden="true"></i>
+  	</div>
+  </button>
+</div>
