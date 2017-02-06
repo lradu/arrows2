@@ -292,6 +292,67 @@ export class DashboardComponent {
 				});
 	}
 
+	exportCSV(path){
+		let ar = "";
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/' + path)
+			.once("value", 
+				(snap) => {
+					getData(snap.val())
+					let csv = document.createElement('a');
+					let csvContent = ar;
+					let blob = new Blob([csvContent],{type: 'text/csv;charset=utf-8;'});
+					let url = URL.createObjectURL(blob);
+					csv.href = url;
+					csv.setAttribute('download', path + '.csv');
+					document.body.appendChild(csv);
+					csv.click();
+					csv.remove();
+				});
+
+			function getData(data){
+				let line;
+				for(let a in data){
+					line = "";
+					if(!ar){
+						for(let b in data[a]){
+							if(typeof data[a][b] === 'object'){
+								for(let c in data[a][b]){
+									if(line != "") { line += ","; }
+									line += b + "_" + c;
+								}
+							} else {
+								if(line != "") { line += ","; }
+								line += b;
+							}
+						}
+						line += "\r\n";
+						ar += line;
+						line = "";
+					}
+					for(let b in data[a]){
+						if(typeof data[a][b] === 'object'){
+							for(let c in data[a][b]){
+								if(line != "") { line += ","; }
+								line += data[a][b][c] || "null";
+							}
+						} else{
+							if(line != "") { line += ","; }
+							line += data[a][b] || "null";
+						}
+					}
+					line += "\r\n";
+					ar += line;
+				}
+				return ar;
+			}
+	}
+	exportSVG(){
+		let svg = document.getElementsByTagName("svg")[0];
+		let rawSvg = new XMLSerializer().serializeToString(svg);
+		window.open( "data:image/svg+xml;base64," + btoa( rawSvg ) );
+	}
+
 	onEvent(event) {
 	   event.stopPropagation();
 	}

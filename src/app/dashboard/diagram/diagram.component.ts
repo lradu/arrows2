@@ -604,8 +604,9 @@ export class DiagramComponent implements OnInit {
 	zoomFit(){
     let gNodes = this.gNodes.node().getBBox();
   	let svg = this.svg.node();
-  	let fullWidth = svg.clientWidth,
-  	    fullHeight = svg.clientHeight;
+  	let fullWidth = svg.clientWidth || svg.parentNode.clientWidth,
+  	    fullHeight = svg.clientHeight || svg.parentNode.clientHeight;
+  	    
   	let width = gNodes.width,
   	    height = gNodes.height;
   	let midX = gNodes.x + width / 2,
@@ -617,6 +618,7 @@ export class DiagramComponent implements OnInit {
   	let tx = fullWidth / 2 - scale * midX,
   			ty = fullHeight / 2 - scale * midY;
   	let t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+
   	this.svg
   		.transition()
   		.call(this.zoom.transform, t);

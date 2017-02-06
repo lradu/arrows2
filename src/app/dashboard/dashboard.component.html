@@ -1,4 +1,4 @@
-<nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+ <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
   <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
   </button>
@@ -118,9 +118,9 @@
     	<li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-external-link" aria-hidden="true"></i> Export</a>
         <div class="dropdown-menu dropdown-menu-right"  aria-labelledby="responsiveNavbarDropdown">
-	        <a class="dropdown-item" >Markup</a>
-	        <a class="dropdown-item" >SVG</a>
-	        <a class="dropdown-item" >Cypher</a>
+          <a class="dropdown-item" (click)="exportCSV('nodes')">CSV: Nodes</a>
+          <a class="dropdown-item" (click)="exportCSV('relationships')">CSV: Relationships</a>
+	        <a class="dropdown-item" (click)="exportSVG()">SVG</a>
         </div>
       </li>
       <!-- Settings -->
