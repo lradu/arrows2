@@ -4,11 +4,13 @@ import { Router } from '@angular/router';
 
 import { DiagramComponent } from './diagram/diagram.component';
 import { Node } from './diagram/graph/node';
+import { ExportData } from './dashboard.service';
 
 @Component({
   selector: 'dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  styleUrls: ['./dashboard.component.css'],
+  providers: [ExportData]
 })
 
 export class DashboardComponent {
@@ -31,7 +33,8 @@ export class DashboardComponent {
 		private af: AngularFire,
 		@Inject(FirebaseApp) firebase: any,
 		private router: Router,
-		private ref: ChangeDetectorRef
+		private ref: ChangeDetectorRef,
+		private exportData: ExportData
 		) {
 			this.dbref = firebase.database().ref();
 			this.user = firebase.auth().currentUser;
@@ -292,65 +295,32 @@ export class DashboardComponent {
 				});
 	}
 
-	exportCSV(path){
-		let ar = "";
+	exportCSV(path){	
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data/' + path)
 			.once("value", 
 				(snap) => {
-					getData(snap.val())
-					let csv = document.createElement('a');
-					let csvContent = ar;
-					let blob = new Blob([csvContent],{type: 'text/csv;charset=utf-8;'});
-					let url = URL.createObjectURL(blob);
-					csv.href = url;
-					csv.setAttribute('download', path + '.csv');
-					document.body.appendChild(csv);
-					csv.click();
-					csv.remove();
-				});
-
-			function getData(data){
-				let line;
-				for(let a in data){
-					line = "";
-					if(!ar){
-						for(let b in data[a]){
-							if(typeof data[a][b] === 'object'){
-								for(let c in data[a][b]){
-									if(line != "") { line += ","; }
-									line += b + "_" + c;
-								}
-							} else {
-								if(line != "") { line += ","; }
-								line += b;
-							}
-						}
-						line += "\r\n";
-						ar += line;
-						line = "";
-					}
-					for(let b in data[a]){
-						if(typeof data[a][b] === 'object'){
-							for(let c in data[a][b]){
-								if(line != "") { line += ","; }
-								line += data[a][b][c] || "null";
-							}
-						} else{
-							if(line != "") { line += ","; }
-							line += data[a][b] || "null";
-						}
-					}
-					line += "\r\n";
-					ar += line;
-				}
-				return ar;
-			}
+					this.exportData.csv(snap.val(), path);
+				});		
 	}
 	exportSVG(){
-		let svg = document.getElementsByTagName("svg")[0];
-		let rawSvg = new XMLSerializer().serializeToString(svg);
-		window.open( "data:image/svg+xml;base64," + btoa( rawSvg ) );
+		this.exportData.svg();
+	}
+	exportCypher(){
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data')
+			.once("value", 
+				(snap) => {
+					this.exportData.cypher(snap.val());
+				});	
+	}
+	exportMarkup(){
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data')
+			.once("value", 
+				(snap) => {
+					this.exportData.markup(snap.val());
+				});
 	}
 
 	onEvent(event) {
