@@ -32,6 +32,8 @@ export class DiagramComponent implements OnInit {
 	public showTools: boolean;
 	public showNodeTools: boolean;
 	public mirrorNode: any;
+	public nodeLocked: boolean = false;
+	public removeLocked: boolean = false;
 
 	constructor(
 		private af: AngularFire, 
@@ -45,7 +47,7 @@ export class DiagramComponent implements OnInit {
 				"color": "#292b2c",
 				"isRectangle": false,
 				"isLocked": false
-			};
+			}
 	}
 
 	ngOnInit(){
@@ -226,6 +228,14 @@ export class DiagramComponent implements OnInit {
 		let that = this;
 		let closestNode
 		let newNode = new Node();
+		this.svg
+			.on("click", function(){
+				if(that.nodeLocked){
+					let x = d3.mouse(that.gNodes.node())[0] - 50;
+					let y = d3.mouse(that.gNodes.node())[1] - 50;
+					that.newNode(x, y);
+				}
+			})
 		this.gNodes.selectAll("rect.newNode")
 			.data([newNode])
 			.remove()
@@ -259,11 +269,16 @@ export class DiagramComponent implements OnInit {
 			  .on("mouseleave", mLeave)
 			  .on("click", (node) => {
 			  	if(this.access != "Read Only"){
-				   	this.currentNode = node;
-				   	this.copyMirrorNode();
-				   	this.showNodeTools = true;
-				  	if(!this.mirrorNode.isLocked) { this.showTools = true; }
-				  	this.ref.detectChanges();
+			  		if(!this.removeLocked){
+					   	this.currentNode = node;
+					   	this.copyMirrorNode();
+					   	this.showNodeTools = true;
+					  	if(!this.mirrorNode.isLocked) { this.showTools = true; }
+					  	this.ref.detectChanges();
+					  } else {
+					  	this.currentNode = node;
+					  	this.deleteNode();
+					  }
 			  	}
 			   })
 			  .call(d3.drag()
@@ -301,10 +316,15 @@ export class DiagramComponent implements OnInit {
 					.on("mouseleave", mRingLeave)
 					.on("click", (rl) => {
 				  	if(this.access != "Read Only"){
-					   	this.currentR = rl;
-					   	this.showNodeTools = false;
-					  	this.showTools = true;
-					  	this.ref.detectChanges();
+				  		if(!this.removeLocked){
+						   	this.currentR = rl;
+						   	this.showNodeTools = false;
+						  	this.showTools = true;
+						  	this.ref.detectChanges();
+						  } else {
+						  	this.currentR = rl;
+						  	this.deleteR();
+						  }
 				  	}
 				   });
 
@@ -641,6 +661,21 @@ export class DiagramComponent implements OnInit {
 		Node
 
 	*/
+	newNode(x, y){
+		let node = new Node();
+		node.isRectangle = this.mirrorNode.isRectangle;
+		node.style.fill = this.mirrorNode.fill;
+		node.style.color = this.mirrorNode.color;
+		node.x = x;
+		node.y = y;
+
+		let getId = this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/nodes')
+			.push(node);
+		getId.ref.update({
+			"id": getId.key
+		});
+	}
 	saveNode() {
 		let g = this.svg.append("g");
 		let txt = g.append("text")
@@ -710,7 +745,6 @@ export class DiagramComponent implements OnInit {
 			this.mirrorNode.isRectangle = this.currentNode.isRectangle;
 		}
 	}
-
 	/*
 
 		Relationship

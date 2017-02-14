@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { DiagramComponent } from './diagram/diagram.component';
 import { Node } from './diagram/graph/node';
 import { ExportData } from './dashboard.service';
+import * as d3 from 'd3';
 
 @Component({
   selector: 'dashboard',
@@ -28,6 +29,13 @@ export class DashboardComponent {
 	public asc: boolean;
 	public col: string;
 	public date: string;
+
+	public importFileName: string = "Choose file...";
+	public importError: string;
+	public showImport: boolean = false;
+	public importReady: string;
+	public importData: any;
+	public importSuccess: string;
 
 	constructor(
 		private af: AngularFire,
@@ -133,16 +141,6 @@ export class DashboardComponent {
 		this.ref.detectChanges();
 	}
 
-	newNode(){
-		let node = new Node();
-		let getId = this.dbref
-			.child('diagrams/' + this.currentDiagram + '/data/nodes')
-			.push(node);
-		getId.ref.update({
-			"id": getId.key
-		});
-	}
-
 	filterDiagrams(value){
 		let reg = new RegExp(value.split('').join('\\w*'), 'i');
 		this.diagrams.forEach(function(item){
@@ -155,13 +153,18 @@ export class DashboardComponent {
 		})
 	}
 
-	newDiagram(){
-		let node = new Node();
+	newDiagram(nodes){
+		let l = {};
+		if(nodes){
+			for(let n of nodes){
+				l[n.id] = n;
+			}
+		} else {
+			l["firstNode"] = new Node();
+		}
 		this.dbref.child('diagrams/').push({
 			"data": {
-				"nodes": {
-					"firstNode": node
-				}
+				"nodes": l
 			},
 			"info" : {
         "created" : this.date,
@@ -294,7 +297,75 @@ export class DashboardComponent {
 					});
 				});
 	}
+	downloadSample(){
+		let head = "caption,id,isRectangle,properties_text,properties_width,radius,style_color,style_fill,style_stroke,style_strokeWidth,x,y\r\n";
+		let csv = document.createElement('a');
+		let csvContent = head;
+		let blob = new Blob([csvContent],{type: 'text/csv;charset=utf-8;'});
+		let url = URL.createObjectURL(blob);
+		csv.href = url;
+		csv.setAttribute('download', 'sample-nodes.csv');
+		document.body.appendChild(csv);
+		csv.click();
+		csv.remove();
+	}
+	importCSV(event){
+		this.importError = "";
+		let nodes = [];
+		let files = event.srcElement.files;
+		if(files.length){
+			let head = "caption,id,isRectangle,properties_text,properties_width,radius,style_color,style_fill,style_stroke,style_strokeWidth,x,y";
+			this.importFileName = files[0].name;
+			let reader = new FileReader();
+			reader.readAsText(files[0]); 
+			reader.onload = (event) => {
+				let data = event.target["result"];
+				let lines = data.split("\r\n");
+				let header = lines[0];
 
+				if(header != head || lines.length < 2){
+					this.importError = "Wrong data format.";
+					return;
+				} else {
+					header = header.split(',');
+					for(let i = 1; i < lines.length; i++){
+						let line = lines[i].split(",");
+						if(line.length == header.length) {
+							let node = new Node()
+							for(let j = 0; j < line.length; j++){
+								let keys = header[j].split("_");
+								if(line[j] === "false"){ line[j] = false }
+								if(line[j] === "true"){ line[j] = true }
+								if(keys.length == 1){
+									if(typeof node[keys[0]] === "number"){ line[j] = Number(line[j]); }
+									node[keys[0]] = line[j] === "null" ? "":line[j];
+								} else {
+									if(typeof node[keys[0]][keys[1]] === "number"){ line[j] = Number(line[j]); }
+									node[keys[0]][keys[1]] = line[j] === "null" ? "":line[j];
+								}
+							}
+							nodes.push(node);
+						}
+					}
+					if(nodes.length){
+						this.importData = nodes; 
+						this.importReady = "Import";
+					} else {
+						this.importError = "Wrong data format.";
+						return;
+					}
+				}
+			}
+		}
+	}
+	importNodes(){
+		this.importReady = "Importing...";
+		this.newDiagram(this.importData);
+		this.importReady = "";
+		this.importFileName = "Choose file...";
+		this.importSuccess = "Success.";
+		setTimeout(()=>{ this.importSuccess = ""; }, 4000);
+	}
 	exportCSV(path){	
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data/' + path)
@@ -322,7 +393,6 @@ export class DashboardComponent {
 					this.exportData.markup(snap.val());
 				});
 	}
-
 	onEvent(event) {
 	   event.stopPropagation();
 	}

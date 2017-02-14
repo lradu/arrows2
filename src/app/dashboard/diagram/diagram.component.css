@@ -15,31 +15,23 @@
 	border-radius: 14px;
 	padding: 3px;
 }
-#ut-group {
+.zoom {
+	margin-top: 20px;
+}
+.ut{
+
+	margin-top: 110px;
+}
+.node {
+	margin-top: 162px;
+}
+.tool {
 	display: flex;
 	position: absolute;
-	margin-top: 20px;
 	margin-left: 20px;
 }
-#zoom-group {
-	display: none;
-}
-
 #diagram {
 	position: absolute;
 	width: 100%;
 	height: calc(100% - 60px);
-}
-
-@media (min-width: 992px) {
-	#zoom-group {
-		display: flex;
-		position: absolute;
-		margin-top: 20px;
-		margin-left: 20px;
-	}
-	#ut-group {
-		margin-top: 110px;
-		margin-left: 20px;
-	}
 }

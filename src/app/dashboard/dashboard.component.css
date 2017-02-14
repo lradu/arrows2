@@ -7,6 +7,10 @@
 	padding: 15px;
 }
 
+.custom-file-control::before {
+    content: "Browse";
+}
+
 @media (min-width: 992px) {
 	.navbar-brand {
 		display: none;

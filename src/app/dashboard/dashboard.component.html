@@ -19,7 +19,9 @@
       </li>
       <!-- Diagrams -->
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-list-alt" aria-hidden="true"></i> Diagrams</a>
+        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-list-alt" aria-hidden="true"></i> Diagrams
+        </a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="diagrams" (click)="onEvent($event)">
           <div class="col-sm-12">
             <div class="input-group mb-4">
@@ -68,7 +70,9 @@
       </li>
       <!-- Share -->
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-share-square-o" aria-hidden="true"></i> Share</a>
+        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-share-square-o" aria-hidden="true"></i> Share
+        </a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="users" (click)="onEvent($event)">
           <div class="col-lg-10 mb-4" *ngIf='access=="Owner"'>
               <div class="input-group">
@@ -110,13 +114,37 @@
       </li>
     </ul>
     <ul class="navbar-nav float-lg-right">
-      <!-- Add node -->
-    	<li class="nav-item" *ngIf='access!="Read Only"'>
-    	  <a class="nav-link" (click)="newNode()"><i class="fa fa-plus-circle" aria-hidden="true"></i> Node</a>
-    	</li>
+      <!-- Import -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-upload" aria-hidden="true"></i> Import
+        </a>
+        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="responsiveNavbarDropdown" (click)="onEvent($event)">
+          <div class="importNodes" style="padding: 20px;">
+            <select class="custom-select mb-4 mr-4">
+                <option value="1">CSV: Nodes</option>
+            </select>
+            <button type="button" class="btn btn btn-outline-primary mb-4" (click)="downloadSample()"><i class="fa fa-download" aria-hidden="true"></i> Sample</button>
+            <label class="custom-file">
+              <input type="file" id="importCSV" class="custom-file-input" (change)="importCSV($event)">
+              <span class="custom-file-control">{{ importFileName }}</span>
+              <small style="font-size: 75%">Note: file must be formatted properly for import to work.</small>
+            </label>
+            <button *ngIf="importReady" type="button" class="btn btn btn-primary float-right mb-2 mt-2" (click)="importNodes()">{{ importReady }}</button>
+            <div class="alert alert-danger" role="alert" *ngIf="importError">
+              {{ importError }}
+            </div>
+            <div class="alert alert-success" role="alert" *ngIf="importSuccess">
+              {{ importSuccess }}
+            </div>
+          </div>
+        </div>
+      </li>
       <!-- Export -->
     	<li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-external-link" aria-hidden="true"></i> Export</a>
+        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-download" aria-hidden="true"></i> Export
+        </a>
         <div class="dropdown-menu dropdown-menu-right"  aria-labelledby="responsiveNavbarDropdown">
           <a class="dropdown-item" (click)="exportCypher()">Cypher</a>
           <a class="dropdown-item" (click)="exportCSV('nodes')">CSV: Nodes</a>
@@ -127,7 +155,9 @@
       </li>
       <!-- Settings -->
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-cog" aria-hidden="true"></i> Settings</a>
+        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-cog" aria-hidden="true"></i> Settings
+        </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="responsiveNavbarDropdown">
           <a class="dropdown-item" routerLink="/dashboard/profile"><i class="fa fa-user-circle-o" aria-hidden="true"></i> Profile</a>
           <a class="dropdown-item" (click)="logout()"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout</a>

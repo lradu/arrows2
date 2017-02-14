@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 
 @Injectable()
 export class ExportData {
-
 	svg(): void {
 		let svg = document.getElementsByTagName("svg");
 		if(svg){
@@ -10,6 +9,7 @@ export class ExportData {
 			window.open( "data:image/svg+xml;base64," + btoa(rawSvg) );
 		}
 	}
+
 	csv(data, name): void {
 		let ar = "";
 		getData(data)
@@ -47,11 +47,11 @@ export class ExportData {
 					if(typeof data[a][b] === 'object'){
 						for(let c in data[a][b]){
 							if(line != "") { line += ","; }
-							line += data[a][b][c] || "null";
+							line += data[a][b][c] === "" ? "null":data[a][b][c];
 						}
 					} else{
 						if(line != "") { line += ","; }
-						line += data[a][b] || "null";
+						line += data[a][b] === "" ? "null":data[a][b];
 					}
 				}
 				line += "\r\n";
