@@ -729,10 +729,7 @@ export class DiagramComponent implements OnInit {
 		this.showTools = false;
 		this.ref.detectChanges();
 	}
-
-	lockMirrorNode(){
-		this.mirrorNode.isLocked = this.mirrorNode.isLocked ? false:true; 
-	}
+	
 	copyMirrorNode(){
 		if(this.mirrorNode.isLocked){
 			this.currentNode.style.color = this.mirrorNode.color;

@@ -83,6 +83,12 @@ export class DashboardComponent {
 					//current diagram
 					this.currentDiagram = snap.val();
 
+					//update date
+					this.dbref
+						.child('diagrams/' + this.currentDiagram + '/info')
+						.update({
+							"lastUpdate": this.date
+						});
 					//title
 					this.dbref
 						.child('diagrams/' + snap.val() + '/info/title')
@@ -312,7 +318,7 @@ export class DashboardComponent {
 	importCSV(event){
 		this.importError = "";
 		let nodes = [];
-		let files = event.srcElement.files;
+		let files = event.target.files;
 		if(files.length){
 			let head = "caption,id,isRectangle,properties_text,properties_width,radius,style_color,style_fill,style_stroke,style_strokeWidth,x,y";
 			this.importFileName = files[0].name;

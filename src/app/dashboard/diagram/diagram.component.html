@@ -81,21 +81,17 @@
   <button type="button" class="btn btn-secondary" (click)="zoomFit()"><i class="fa fa-crosshairs" aria-hidden="true"></i></button>
 </div>
 <div class="btn-group-vertical tool node">
-  <button type="button" class="btn btn-secondary" (click)="lockMirrorNode()" style="padding: 8px;">
+  <button type="button" class="btn btn-secondary" (click)="nodeLocked=false; removeLocked=false; mirrorNode.isLocked=!mirrorNode.isLocked;" style="padding: 8px;">
   	<img *ngIf="!mirrorNode.isLocked" src="../assets/img/paintbrush_off.svg" style="width: 29.72px;">
-  	<div *ngIf="mirrorNode.isLocked" id="mirrorNode" [style.color]="mirrorNode.color" [style.border-radius]="mirrorNode.isRectangle ? '5px':'14px'" [style.background-color]="mirrorNode.fill">
-  		T
- 		</div>
+  	<img *ngIf="mirrorNode.isLocked" src="../assets/img/paintbrush_on.svg" style="width: 29.72px;">
   </button>
-	<button type="button" class="btn btn-secondary" (click)="nodeLocked=!nodeLocked" style="padding: 8px;">
-		<div *ngIf="!nodeLocked" id="mirrorNode">
-		 &#10010;
-		</div>
-		<div *ngIf="nodeLocked" id="mirrorNode" [style.color]="mirrorNode.color" [style.border-radius]="mirrorNode.isRectangle ? '5px':'14px'" [style.background-color]="mirrorNode.fill">
-			T
-		</div>
+	<button type="button" [class]="nodeLocked ? 'btn btn-danger':'btn btn-secondary'" (click)="removeLocked=false; mirrorNode.isLocked=false; nodeLocked=!nodeLocked" style="padding: 8px;">
+		<i class="fa fa-plus-circle" aria-hidden="true"></i>
 	</button>
-	<button type="button" [class]="removeLocked ? 'btn btn-danger':'btn btn-secondary'" (click)="removeLocked=!removeLocked">
+	<button type="button" [class]="removeLocked ? 'btn btn-danger':'btn btn-secondary'" (click)="mirrorNode.isLocked=false; nodeLocked=false; removeLocked=!removeLocked">
 		<i class="fa fa-trash-o" aria-hidden="true"></i>
 	</button>
+  <div *ngIf="nodeLocked || mirrorNode.isLocked" id="mirrorNode" [style.top]="nodeLocked ? '48px':'0px'" [style.color]="mirrorNode.color" [style.border-radius]="mirrorNode.isRectangle ? '5px':'14px'" [style.background-color]="mirrorNode.fill">
+ 	 T
+  </div>
 </div>
