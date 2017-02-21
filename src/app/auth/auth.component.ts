@@ -29,11 +29,9 @@ export class SignupComponent {
   			password: formData.value.password
   		}).then(
   			(success) => {
-  				console.log(success);
           this.createUserData();
   		}).catch(
   			(err) => {
-  				console.log(err);
   				this.error = err.message;
   		})
   	}
@@ -105,11 +103,9 @@ export class LoginComponent {
   			password: formData.value.password
   		}).then(
   			(success) => {
-  				console.log(success);
   				this.router.navigate(['/dashboard']);
   		}).catch(
   			(err) => {
-  				console.log(err);
   				this.error = err.message;
   		})
   	}
@@ -133,11 +129,9 @@ export class ResetpassComponent {
       this.auth.sendPasswordResetEmail(formData.value.email)
       .then( 
       	(response) => {
-        	console.log('Reset worked');
         	this.router.navigate(['/login']);
       }).catch( 
       	(err) => {
-          console.log(err);
           this.error = err.message;
           this.ref.detectChanges();
         })

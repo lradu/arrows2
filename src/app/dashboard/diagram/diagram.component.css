@@ -18,22 +18,43 @@
 	text-align: center;
 }
 .zoom {
-	margin-top: 20px;
+	margin-top: 10px;
 }
-.ut{
-
-	margin-top: 110px;
+.fit{
+	margin-top: 96px;
 }
 .node {
-	margin-top: 162px;
+	margin-top: 144px;
+}
+.undo{
+	margin-top: 278px;
+}
+.play{
+	margin-top: 364px;
 }
 .tool {
 	display: flex;
 	position: absolute;
-	margin-left: 20px;
+	margin-left: 12px;
 }
 #diagram {
 	position: absolute;
 	width: 100%;
 	height: calc(100% - 60px);
+}
+.slider{
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	height: 100px;
+	background-color: #d9d9d9;
+	padding: 10px;
+}
+.slider-inside{
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }

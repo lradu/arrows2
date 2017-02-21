@@ -27,6 +27,8 @@ export class DiagramComponent implements OnInit {
 	public currentDiagram: string;
 	public currentNode: any;
 	public currentR: any;
+	public currentIndex: number;
+	public maxIndex: number;
 	public access: string;
 
 	public showTools: boolean;
@@ -34,6 +36,8 @@ export class DiagramComponent implements OnInit {
 	public mirrorNode: any;
 	public nodeLocked: boolean = false;
 	public removeLocked: boolean = false;
+	public showSlider: boolean = false;
+
 
 	constructor(
 		private af: AngularFire, 
@@ -112,6 +116,13 @@ export class DiagramComponent implements OnInit {
 								}
 						}
 					}); 
+						this.dbref
+							.child('diagrams/' + this.currentDiagram + '/history')
+							.once('value', 
+								(snapShot) => {
+									this.currentIndex = snapShot.numChildren();
+									this.maxIndex = this.currentIndex;
+								})
 			})
 	}
 
@@ -228,6 +239,7 @@ export class DiagramComponent implements OnInit {
 		let that = this;
 		let closestNode
 		let newNode = new Node();
+		let start;
 		this.svg
 			.on("click", function(){
 				if(that.nodeLocked){
@@ -282,7 +294,9 @@ export class DiagramComponent implements OnInit {
 			  	}
 			   })
 			  .call(d3.drag()
-			     .on("drag", dragged));
+			  	.on('start', dragStart)
+			    .on("drag", dragged)
+			  	.on("end", dragEnd));
 
 		let relOverlays = this.gOverlay.selectAll("g.groups")
 			.data(that.groups);
@@ -434,7 +448,10 @@ export class DiagramComponent implements OnInit {
 				.child('diagrams/' + that.currentDiagram + '/data/relationships/' + rel.key)
 				.update({
 					"id": rel.key
-				})
+				}).then(
+				(success) =>{
+					that.updateHistory();
+				});
 		}
 
 		function dragged(node) {
@@ -445,6 +462,14 @@ export class DiagramComponent implements OnInit {
 					"x": d3.event.x,
 					"y": d3.event.y
 				});
+			}
+		}
+		function dragStart(){
+			start = [d3.event.x, d3.event.y];
+		}
+		function dragEnd(){
+			if(Math.max(Math.abs(Math.abs(d3.event.x) - Math.abs(start[0])), Math.abs(Math.abs(d3.event.y) - Math.abs(start[1]))) > 10){ //prevent update on click event 
+				that.updateHistory();
 			}
 		}
 	}
@@ -601,6 +626,8 @@ export class DiagramComponent implements OnInit {
 		this.showTools = false;
 		this.ref.detectChanges();
 	}
+	slider(){
+	}
 
 	/*
 
@@ -674,6 +701,9 @@ export class DiagramComponent implements OnInit {
 			.push(node);
 		getId.ref.update({
 			"id": getId.key
+		}).then(
+		(success) =>{
+			this.updateHistory();
 		});
 	}
 	saveNode() {
@@ -697,7 +727,10 @@ export class DiagramComponent implements OnInit {
 				"radius": this.currentNode.radius,
 				"style": this.currentNode.style,
 				"properties": this.currentNode.properties
-			});
+			}).then(
+		(success) =>{
+			this.updateHistory();
+		});
 		this.showTools = false;
 		this.ref.detectChanges();
 	}
@@ -722,7 +755,10 @@ export class DiagramComponent implements OnInit {
 				snap.forEach((snapChild) => {
 					snapChild.ref.remove();
 				});
-			});
+			}).then(
+		(success) =>{
+			this.updateHistory();
+		});
 		ref
 			.child('nodes/' + this.currentNode.id)
 			.remove();
@@ -753,7 +789,10 @@ export class DiagramComponent implements OnInit {
 			.update({
 				"type": this.currentR.type,
 				"style": this.currentR.style
-			})
+			}).then(
+		(success) =>{
+			this.updateHistory();
+		});
 		this.showTools = false;
 		this.ref.detectChanges();
 	}
@@ -761,7 +800,11 @@ export class DiagramComponent implements OnInit {
 	deleteR(){
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)
-			.remove();
+			.remove()
+			.then(
+			(success) =>{
+				this.updateHistory();
+			});
 		this.showTools = false;
 		this.ref.detectChanges();
 	}
@@ -775,6 +818,63 @@ export class DiagramComponent implements OnInit {
 			.update({
 				"startNode": this.currentR.startNode,
 				"endNode": this.currentR.endNode
+			})
+			.then(
+			(success) =>{
+				this.updateHistory();
 			});
+	}
+
+	updateHistory(){
+		this.currentIndex += 1;
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data')
+			.once('value', 
+				(snap) => { 
+					snap.ref.parent
+						.child('history')
+						.update({
+							[this.currentIndex]: snap.val()
+						});
+				}).then(
+				(success) => {
+					this.maxIndex = this.currentIndex;
+					this.dbref
+						.child('diagrams/' + this.currentDiagram + '/history')
+						.once('value', 
+							(snapShot) => {
+								for(let i = snapShot.numChildren(); i > this.maxIndex; i--){
+									snapShot.ref.child('' + i).remove();
+								}
+							});
+				});
+	}
+	undo(){
+		this.currentIndex -= 1;
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/history/' + this.currentIndex)
+			.once('value',
+				(snap) => {
+					this.dbref
+						.child('diagrams/' + this.currentDiagram)
+						.update({
+							'data':snap.val()
+						});
+				});
+	}
+	redo(){
+		this.currentIndex += 1;
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/history/' + this.currentIndex)
+			.once('value',
+				(snap) => {
+					if(snap.val()){
+					this.dbref
+						.child('diagrams/' + this.currentDiagram)
+						.update({
+							'data':snap.val()
+						});
+					}
+				});
 	}
 }

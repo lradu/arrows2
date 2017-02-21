@@ -249,7 +249,6 @@ export class DashboardComponent {
 	}
 
 	inviteUser(email, access){
-		console.log(email, access);
 		if(email == this.user.email){
 			this.error = "You cannot change your status.";
 			setTimeout(() => {
