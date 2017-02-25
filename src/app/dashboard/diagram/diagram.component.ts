@@ -105,11 +105,7 @@ export class DiagramComponent implements OnInit {
 						.child('diagrams/' + this.currentDiagram + '/data')
 						.on('value', (snapShot) => {
 							if(snapShot.ref.parent.key == this.currentDiagram){
-								this.model.load(snapShot.val());
-								d3.selectAll('svg > g > *').remove();
-								this.renderRelationships();
-								this.renderNodes();
-								this.renderOverlay();
+								this.render(snapShot.val());
 								if(zoomFit){
 									this.zoomFit();
 									zoomFit = false;
@@ -131,6 +127,13 @@ export class DiagramComponent implements OnInit {
 		Render
 		
 	*/
+	render(data){
+		this.model.load(data);
+		d3.selectAll('svg.graph > g > *').remove();
+		this.renderRelationships();
+		this.renderNodes();
+		this.renderOverlay();
+	}
 	renderNodes(){
 		let nodes = this.gNodes.selectAll("rect.node")
 		  .data(this.model.nodes)
@@ -377,6 +380,8 @@ export class DiagramComponent implements OnInit {
 		}
 
 		function dragRing(n){
+			if(that.access === "Read Only") return;
+
 			closestNode = "";
 			newNode.isRectangle = n.isRectangle;
 			newNode.style.fill = n.style.fill;
@@ -427,6 +432,8 @@ export class DiagramComponent implements OnInit {
 		}
 
 		function dragEndRing(n){
+			if(that.access === "Read Only") return;
+
 			let newRelationship = new Relationship();
 			if(closestNode){
 				newRelationship["startNode"] = n.id;
@@ -465,9 +472,11 @@ export class DiagramComponent implements OnInit {
 			}
 		}
 		function dragStart(){
+			if(that.access === "Read Only") return;
 			start = [d3.event.x, d3.event.y];
 		}
 		function dragEnd(){
+			if(that.access === "Read Only") return;
 			if(Math.max(Math.abs(Math.abs(d3.event.x) - Math.abs(start[0])), Math.abs(Math.abs(d3.event.y) - Math.abs(start[1]))) > 10){ //prevent update on click event 
 				that.updateHistory();
 			}
@@ -616,72 +625,7 @@ export class DiagramComponent implements OnInit {
 	          "y": cy > 0 ? cy - arcRadius : cy + arcRadius
 	      }
 	  };
-	}  
-	/*
-
-		Tools
-		
-	*/
-	closeTools(){
-		this.showTools = false;
-		this.ref.detectChanges();
-	}
-	slider(){
-	}
-
-	/*
-
-		Zoom
-		
-	*/
-	zoomEvent() {
-		this.zoom = d3.zoom()
-      .scaleExtent([1/10, 10])
-      .on("zoom", zoomed);
-
-		this.svg.call(this.zoom)
-			.on("wheel.zoom", null)
-			.on("dblclick.zoom", null);
-
-    function zoomed() {
-        d3.selectAll("g.layer").attr("transform", d3.event.transform);
-    }
-	}
-
-	zoomFit(){
-    let gNodes = this.gNodes.node().getBBox();
-  	let svg = this.svg.node();
-  	let fullWidth = svg.clientWidth || svg.parentNode.clientWidth,
-  	    fullHeight = svg.clientHeight || svg.parentNode.clientHeight;
-  	    
-  	let width = gNodes.width,
-  	    height = gNodes.height;
-  	let midX = gNodes.x + width / 2,
-  	    midY = gNodes.y + height / 2;
-
-  	if (width == 0 || height == 0) { return; }
-
-  	let scale = 0.95 / Math.max(width / fullWidth, height / fullHeight);
-  	let tx = fullWidth / 2 - scale * midX,
-  			ty = fullHeight / 2 - scale * midY;
-  	let t = d3.zoomIdentity.translate(tx, ty).scale(scale);
-
-  	this.svg
-  		.transition()
-  		.call(this.zoom.transform, t);
-	}
-
-	zoomChange(val) {
-		if(val) {
-			this.svg
-				.transition()
-				.call(this.zoom.scaleBy, 1.2);
-		} else {
-			this.svg
-				.transition()
-				.call(this.zoom.scaleBy, 0.8);
-		}
-	}
+	} 
 
 	/*
 
@@ -778,6 +722,7 @@ export class DiagramComponent implements OnInit {
 			this.mirrorNode.isRectangle = this.currentNode.isRectangle;
 		}
 	}
+
 	/*
 
 		Relationship
@@ -825,6 +770,15 @@ export class DiagramComponent implements OnInit {
 			});
 	}
 
+	/*
+
+		Tools
+		
+	*/
+	closeTools(){
+		this.showTools = false;
+		this.ref.detectChanges();
+	}
 	updateHistory(){
 		this.currentIndex += 1;
 		this.dbref
@@ -851,19 +805,13 @@ export class DiagramComponent implements OnInit {
 	}
 	undo(){
 		this.currentIndex -= 1;
-		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/history/' + this.currentIndex)
-			.once('value',
-				(snap) => {
-					this.dbref
-						.child('diagrams/' + this.currentDiagram)
-						.update({
-							'data':snap.val()
-						});
-				});
+		this.revertHistory();
 	}
 	redo(){
 		this.currentIndex += 1;
+		this.revertHistory();
+	}
+	revertHistory(){
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/history/' + this.currentIndex)
 			.once('value',
@@ -877,4 +825,120 @@ export class DiagramComponent implements OnInit {
 					}
 				});
 	}
+	slider(){
+		this.access = "Read Only";
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/history')
+			.once('value', (snap) => {
+				if(!snap.val()){
+					return;
+				} 
+				let data = [];
+				for(let obj of snap.val()) {
+					if(obj){
+						data.push(obj);
+					}
+				}
+				
+				let x = 0;
+				let g = d3.select("#gslider")
+					.attr("transform", "translate(0,0)");
+				g.selectAll("circle")
+					.remove();
+				g.selectAll("circle")
+					.data(data)
+					.enter()
+					.append("circle")
+					.attr("cx", function(){
+						x += 30;
+						return x;
+					})
+					.attr("cy", 25)
+					.attr("r", 8)
+					.attr("fill", (data, i) => {
+						if(i == this.currentIndex - 1){
+							return "#008000";
+						}
+						return "#cc0000";
+					})
+					.style("cursor", "pointer")
+					.on('click', (data, i) => {
+						this.currentIndex = i + 1;
+						this.render(data);
+					});
+					
+				let gg = d3.select("#gslider");
+
+				gg.call(d3.drag()
+				    .on("drag", drag));
+				function drag(){
+					gg.attr("transform", "translate(" + (d3.event.x - this.getBBox().width/ 2) + ",0)");
+				}
+			})
+	}
+
+	closeSlider(){
+		this.showSlider = false; 
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/users/' + this.user.uid + '/access')
+			.once('value', 
+				(snap) => {
+					this.access = snap.val();
+				});
+	}
+
+	/*
+
+		Zoom
+		
+	*/
+	zoomEvent() {
+		this.zoom = d3.zoom()
+      .scaleExtent([1/10, 10])
+      .on("zoom", zoomed);
+
+		this.svg.call(this.zoom)
+			.on("wheel.zoom", null)
+			.on("dblclick.zoom", null);
+
+    function zoomed() {
+        d3.selectAll("g.layer").attr("transform", d3.event.transform);
+    }
+	}
+
+	zoomFit(){
+    let gNodes = this.gNodes.node().getBBox();
+  	let svg = this.svg.node();
+  	let fullWidth = svg.clientWidth || svg.parentNode.clientWidth,
+  	    fullHeight = svg.clientHeight || svg.parentNode.clientHeight;
+  	    
+  	let width = gNodes.width,
+  	    height = gNodes.height;
+  	let midX = gNodes.x + width / 2,
+  	    midY = gNodes.y + height / 2;
+
+  	if (width == 0 || height == 0) { return; }
+
+  	let scale = 0.95 / Math.max(width / fullWidth, height / fullHeight);
+  	let tx = fullWidth / 2 - scale * midX,
+  			ty = fullHeight / 2 - scale * midY;
+  	let t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+
+  	this.svg
+  		.transition()
+  		.call(this.zoom.transform, t);
+	}
+
+	zoomChange(val) {
+		if(val) {
+			this.svg
+				.transition()
+				.call(this.zoom.scaleBy, 1.2);
+		} else {
+			this.svg
+				.transition()
+				.call(this.zoom.scaleBy, 0.8);
+		}
+	}
+
 }
