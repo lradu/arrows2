@@ -37,6 +37,7 @@ export class DiagramComponent implements OnInit {
 	public nodeLocked: boolean = false;
 	public removeLocked: boolean = false;
 	public showSlider: boolean = false;
+	public playSlides: boolean = false;
 
 
 	constructor(
@@ -826,65 +827,103 @@ export class DiagramComponent implements OnInit {
 				});
 	}
 	slider(){
-		this.access = "Read Only";
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/history')
 			.once('value', (snap) => {
 				if(!snap.val()){
 					return;
 				} 
-				let data = [];
-				for(let obj of snap.val()) {
-					if(obj){
-						data.push(obj);
-					}
-				}
-				
-				let x = 0;
-				let g = d3.select("#gslider")
-					.attr("transform", "translate(0,0)");
-				g.selectAll("circle")
+				let data = new Array(snap.numChildren());
+				let width = (this.svg.node().clientWidth - 40) / data.length;
+				let x = -width;
+				let g = d3.select("#gslider");
+				g.selectAll("rect")
 					.remove();
-				g.selectAll("circle")
+				g.selectAll("rect")
 					.data(data)
 					.enter()
-					.append("circle")
-					.attr("cx", function(){
-						x += 30;
+					.append("rect")
+					.attr("x", function(){
+						x += width;
 						return x;
 					})
-					.attr("cy", 25)
-					.attr("r", 8)
+					.attr("y", 5)
+					.attr("width", width)
+					.attr("height", 8)
 					.attr("fill", (data, i) => {
-						if(i == this.currentIndex - 1){
-							return "#008000";
+						if(i > this.currentIndex - 1){
+							return "lightgray";
 						}
 						return "#cc0000";
 					})
 					.style("cursor", "pointer")
 					.on('click', (data, i) => {
 						this.currentIndex = i + 1;
-						this.render(data);
+						color(this.currentIndex);
+						translateCircle(this.currentIndex);
+						this.revertHistory();
 					});
-					
-				let gg = d3.select("#gslider");
-
-				gg.call(d3.drag()
-				    .on("drag", drag));
-				function drag(){
-					gg.attr("transform", "translate(" + (d3.event.x - this.getBBox().width/ 2) + ",0)");
+			
+				g.selectAll("circle")
+					.remove();	
+				let circle = g.append("circle")
+					.attr("id", "slidehead")
+					.attr("cx", 0) 
+					.attr("cy", 9)
+					.attr("r", 8)
+					.attr("fill", "#990000");
+					// .call(d3.drag()
+					// 	.on("drag", drag));
+				translateCircle(this.currentIndex);
+				function color(i){
+					let nodes = g.selectAll("rect").nodes();
+					for(let j = 0; j < nodes.length; j++ ){
+						d3.select(nodes[j])
+							.attr("fill", function(){
+								if(j >= i) return "lightgray";
+								return "#cc0000";
+							});
+					}
 				}
+				function translateCircle(i){
+					circle.attr("transform", "translate(" + (i * width) + ",0)");
+				}
+				// function drag(){
+				// 	if(d3.event.x >= 0 && d3.event.x <= width * data.length){
+				// 		circle.attr("transform", "translate(" + d3.event.x  + ",0)");
+				// 	}
+				// }
 			})
 	}
 
-	closeSlider(){
-		this.showSlider = false; 
-		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/users/' + this.user.uid + '/access')
-			.once('value', 
-				(snap) => {
-					this.access = snap.val();
-				});
+	playSlider(){
+		let interval = setInterval(() => {
+			if(this.currentIndex >= this.maxIndex || !this.playSlides){
+				clearInterval(interval);
+				this.playSlides = false;
+				return;
+			}
+			this.currentIndex++;
+			this.revertHistory();
+			translateCircle(this.currentIndex);
+			color(this.currentIndex);
+			}, 1000);
+
+		let g = d3.select("#gslider");
+		function color(i){
+			let nodes = g.selectAll("rect").nodes();
+			for(let j = 0; j < nodes.length; j++ ){
+				d3.select(nodes[j])
+					.attr("fill", function(){
+						if(j >= i) return "lightgray";
+						return "#cc0000";
+					});
+			}
+		}
+		let width = (this.svg.node().clientWidth - 40) / this.maxIndex;
+		function translateCircle(i){
+			d3.select("#slidehead").attr("transform", "translate(" + (i * width) + ",0)");
+		}
 	}
 
 	/*

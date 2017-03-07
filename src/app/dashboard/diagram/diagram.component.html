@@ -95,20 +95,20 @@
  	 T
   </div>
 </div>
-<div *ngIf="access!='Read Only'" class="btn-group-vertical tool undo">
+<div class="btn-group-vertical tool undo">
 	<button type="button" class="btn btn-secondary" [disabled]="currentIndex <= 1" (click)="undo()"><i class="fa fa-level-up" aria-hidden="true" style="transform: rotate(-90deg);"></i></button>
 	<button type="button" class="btn btn-secondary" [disabled]="currentIndex >= maxIndex" (click)="redo()"><i class="fa fa-level-up" aria-hidden="true" style="transform: rotate(90deg);"></i></button>
 </div>
-<div *ngIf="!showSlider" class="btn-group-vertical tool play">
+<div class="btn-group-vertical tool play">
 	<button type="button" class="btn btn-secondary" (click)="showSlider=!showSlider; slider()"><i class="fa fa-play" aria-hidden="true"></i></button>
 </div>
 
 <div [hidden]="!showSlider" class="slider" id="slider">
-	<button type="button" class="btn btn-secondary btn-sm mb-2" style="margin-left: 50vw; color: #292b2c;" (click)="revertHistory(); closeSlider();">Revert</button>
-	<button type="button" class="close mr-2" aria-label="Close" (click)="closeSlider()">
-	  <span aria-hidden="true">&times;</span>
+	<i [class]="playSlides ? 'fa fa-pause':'fa fa-play'" aria-hidden="true" style="display: inline-block; margin-left: 40px; margin-right: 10px;" (click)="playSlides = !playSlides; playSlider()"></i> {{ currentIndex }}/{{ maxIndex }}
+	<button type="button" class="close mr-2" aria-label="Close" (click)="showSlider=false">
+		<span aria-hidden="true">&times;</span>
 	</button>
-	<svg class="svg-slider" id="svg-slider">
+	<svg class="svg-slider" id="svg-slider" >
 		<g id="gslider"></g>
 	</svg>
 </div>
