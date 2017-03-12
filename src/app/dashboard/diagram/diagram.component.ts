@@ -38,7 +38,9 @@ export class DiagramComponent implements OnInit {
 	public removeLocked: boolean = false;
 	public showSlider: boolean = false;
 	public playSlides: boolean = false;
+	public speedSlider: number = 1300;
 
+	public newBranchTitle: string = "New diagram"
 
 	constructor(
 		private af: AngularFire, 
@@ -907,7 +909,7 @@ export class DiagramComponent implements OnInit {
 			this.revertHistory();
 			translateCircle(this.currentIndex);
 			color(this.currentIndex);
-			}, 1000);
+			}, 2300 - this.speedSlider);
 
 		let g = d3.select("#gslider");
 		function color(i){
