@@ -807,10 +807,14 @@ export class DiagramComponent implements OnInit {
 	undo(){
 		this.currentIndex -= 1;
 		this.revertHistory();
+		this.translateCircle(this.currentIndex);
+		this.colorSlide(this.currentIndex);
 	}
 	redo(){
 		this.currentIndex += 1;
 		this.revertHistory();
+		this.translateCircle(this.currentIndex);
+		this.colorSlide(this.currentIndex);
 	}
 	revertHistory(){
 		this.dbref
