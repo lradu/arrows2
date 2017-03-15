@@ -10,13 +10,13 @@
       <div class="modal-body">
       	<div class="form-group">
       	   <label for="newBranchDiagram">Diagram title</label>
-      	   <input type="text" class="form-control col-6" id="newBranchDiagram" [value]="newBranchTitle" #newBranchDiagram>
+      	   <input type="text" class="form-control col-6" id="newBranchDiagram" #newBranchTitle value="New diagram">
       	 </div>
+      	 <button type="button" class="btn btn-primary mb-2" data-dismiss="modal" (click)="createBranch(newBranchTitle.value, 0)">Create and go to new diagram</button>
+      	 <button type="button" class="btn btn-primary mb-2" data-dismiss="modal" (click)="createBranch(newBranchTitle.value, 1)">Create and stay here</button>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Create and go to new diagram</button>
-        <button type="button" class="btn btn-primary">Create and stay here</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>       
       </div>
     </div>
   </div>
@@ -126,7 +126,8 @@
 	<button type="button" class="btn btn-secondary" (click)="showSlider=!showSlider; slider()"><i class="fa fa-play" aria-hidden="true"></i></button>
 </div>
 <div [hidden]="!showSlider" class="slider" id="slider">
-	<i [class]="playSlides ? 'fa fa-pause':'fa fa-play'" aria-hidden="true" style="display: inline-block; margin-left: 40px; margin-right: 10px;" (click)="playSlides = !playSlides; playSlider()"></i>
+	<i *ngIf="currentIndex == maxIndex" class="fa fa-repeat" aria-hidden="true" style="display: inline-block; margin-left: 40px; margin-right: 10px;" (click)="playSlides = !playSlides; replaySlider()"></i>
+	<i *ngIf="currentIndex != maxIndex" [class]="playSlides ? 'fa fa-pause':'fa fa-play'" aria-hidden="true" style="display: inline-block; margin-left: 40px; margin-right: 10px;" (click)="playSlides = !playSlides; playSlider(1)"></i>
 	<small> 
 		{{ currentIndex }}/{{ maxIndex }}
 		<span class="ml-2">Speed: </span> 
@@ -135,9 +136,9 @@
 	<span class="ml-3">
 		<i class="fa fa-code-fork" aria-hidden="true" data-toggle="modal" data-target="#branchModal"></i>
 	</span>
-	<button type="button" class="close mr-2" aria-label="Close" (click)="showSlider=false; this.playSlides = false;">
-		<span aria-hidden="true">&times;</span>
-	</button>
+	<span class="float-right mr-2" (click)="playSlides = !playSlides; playSlider(-1)">
+		<i class="fa fa-backward" aria-hidden="true"></i>
+	</span>
 	<svg class="svg-slider" id="svg-slider" >
 		<g id="gslider"></g>
 	</svg>

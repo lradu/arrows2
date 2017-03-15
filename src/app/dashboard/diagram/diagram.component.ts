@@ -40,8 +40,6 @@ export class DiagramComponent implements OnInit {
 	public playSlides: boolean = false;
 	public speedSlider: number = 1300;
 
-	public newBranchTitle: string = "New diagram"
-
 	constructor(
 		private af: AngularFire, 
 		@Inject(FirebaseApp) firebase: any,
@@ -828,6 +826,12 @@ export class DiagramComponent implements OnInit {
 					}
 				});
 	}
+
+	/*
+
+		Slider
+		
+	*/
 	slider(){
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/history')
@@ -861,8 +865,8 @@ export class DiagramComponent implements OnInit {
 					.style("cursor", "pointer")
 					.on('click', (data, i) => {
 						this.currentIndex = i + 1;
-						color(this.currentIndex);
-						translateCircle(this.currentIndex);
+						this.colorSlide(this.currentIndex);
+						this.translateCircle(this.currentIndex);
 						this.revertHistory();
 					});
 			
@@ -873,59 +877,139 @@ export class DiagramComponent implements OnInit {
 					.attr("cx", 0) 
 					.attr("cy", 9)
 					.attr("r", 8)
-					.attr("fill", "#990000");
-					// .call(d3.drag()
-					// 	.on("drag", drag));
-				translateCircle(this.currentIndex);
-				function color(i){
-					let nodes = g.selectAll("rect").nodes();
-					for(let j = 0; j < nodes.length; j++ ){
-						d3.select(nodes[j])
-							.attr("fill", function(){
-								if(j >= i) return "lightgray";
-								return "#cc0000";
-							});
+					.attr("fill", "#990000")
+					.call(d3.drag()
+						.on("drag", drag));
+				this.translateCircle(this.currentIndex);
+
+				let that = this;
+				function drag(){
+					let x = that.currentIndex * width;
+					if(d3.event.x > 0 && d3.event.x <= width * data.length){
+						if(d3.event.x < x - width / 2 && x > width){
+							circle.attr("transform", "translate(" + (x - width) + ",0)");
+							that.currentIndex -= 1;
+							that.revertHistory();
+							that.colorSlide(that.currentIndex);
+						} else if(d3.event.x > x + width / 2){
+							circle.attr("transform", "translate(" + (x + width) + ",0)");
+							that.currentIndex += 1;
+							that.revertHistory();
+							that.colorSlide(that.currentIndex);
+						}
 					}
 				}
-				function translateCircle(i){
-					circle.attr("transform", "translate(" + (i * width) + ",0)");
-				}
-				// function drag(){
-				// 	if(d3.event.x >= 0 && d3.event.x <= width * data.length){
-				// 		circle.attr("transform", "translate(" + d3.event.x  + ",0)");
-				// 	}
-				// }
 			})
 	}
 
-	playSlider(){
+	playSlider(i){
 		let interval = setInterval(() => {
-			if(this.currentIndex >= this.maxIndex || !this.playSlides){
+			this.currentIndex += i;
+			if(this.currentIndex > this.maxIndex || !this.playSlides){
+				this.currentIndex = this.maxIndex;
+				clearInterval(interval);
+				this.playSlides = false;
+				return;
+			} else if(this.currentIndex < 1){
+				this.currentIndex = 1;
 				clearInterval(interval);
 				this.playSlides = false;
 				return;
 			}
-			this.currentIndex++;
 			this.revertHistory();
-			translateCircle(this.currentIndex);
-			color(this.currentIndex);
+			this.translateCircle(this.currentIndex);
+			this.colorSlide(this.currentIndex);
 			}, 2300 - this.speedSlider);
+	}
 
-		let g = d3.select("#gslider");
-		function color(i){
-			let nodes = g.selectAll("rect").nodes();
-			for(let j = 0; j < nodes.length; j++ ){
-				d3.select(nodes[j])
-					.attr("fill", function(){
-						if(j >= i) return "lightgray";
-						return "#cc0000";
-					});
-			}
-		}
+	replaySlider(){
+		this.currentIndex = 1;
+		this.revertHistory();
+		this.translateCircle(this.currentIndex);
+		this.colorSlide(this.currentIndex);
+		this.playSlider(1);
+	}
+
+	translateCircle(i){
 		let width = (this.svg.node().clientWidth - 40) / this.maxIndex;
-		function translateCircle(i){
-			d3.select("#slidehead").attr("transform", "translate(" + (i * width) + ",0)");
+		d3.select("#slidehead").attr("transform", "translate(" + (i * width) + ",0)");
+	}
+	colorSlide(i){
+		let g = d3.select("#gslider");
+		let nodes = g.selectAll("rect").nodes();
+		for(let j = 0; j < nodes.length; j++ ){
+			d3.select(nodes[j])
+				.attr("fill", function(){
+					if(j >= i) return "lightgray";
+					return "#cc0000";
+				});
 		}
+	}
+
+	/*
+		
+		Branch
+
+	*/
+	createBranch(title, choice){
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/history')
+			.once('value', (snap) => {
+				if(!snap.val()){
+					return;
+				}
+				let data, history = {};
+				snap.forEach((child) => {
+					if(child.key == this.currentIndex){
+						history[child.key] = child.val();
+						data = child.val();
+						snap.ref.parent
+							.child('users/' + this.user.uid + '/access')
+							.once('value', (snapChild) => {
+								this.newDiagram(data, history, snapChild.val(), title, choice);
+							});
+						return;
+					}
+					history[child.key] = child.val();
+				});
+			});
+	}
+
+	newDiagram(data, history, access, title, choice){
+		let date = new Date().toLocaleDateString();
+		this.dbref.child('diagrams/').push({
+			"data": data,
+			"history": history,
+			"info" : {
+        "created" : date,
+        "lastUpdate" : date,
+        "title" : title
+      },
+      "users" : {
+        [this.user.uid] : {
+          "access" : access,
+          "dateAdded" : date,
+          "email" : this.user.email,
+          "lastUpdate" : date
+        }
+      }
+		}).then(
+			(newD) => {
+				this.showSlider = false;
+				this.dbref
+					.child('users/' + this.user.uid + '/diagrams')
+					.update({
+						[newD.key]: true
+				});
+				if(choice){
+					return;
+				}
+				this.dbref
+					.child('users/' + this.user.uid)
+					.update({
+						"currentDiagram": newD.key
+					})
+			});
 	}
 
 	/*
