@@ -657,6 +657,7 @@ export class DiagramComponent implements OnInit {
 			.attr("font-size",  "50px");
 		this.currentNode.radius = getTxtLength(this.currentNode.caption);
 		this.currentNode.properties.width = getTxtLength(this.currentNode.properties.text);
+		//console.log(this.currentNode.properties.text.split("\n"));
 		g.remove();
 		function getTxtLength(t){
 			txt.text(t);
@@ -843,7 +844,7 @@ export class DiagramComponent implements OnInit {
 				if(!snap.val()){
 					return;
 				} 
-				let data = new Array(snap.numChildren());
+				let data = new Array((snap.numChildren() - 1) * 2);
 				let width = (this.svg.node().clientWidth - 40) / data.length;
 				let x = -width;
 				let g = d3.select("#gslider");
@@ -861,14 +862,23 @@ export class DiagramComponent implements OnInit {
 					.attr("width", width)
 					.attr("height", 8)
 					.attr("fill", (data, i) => {
-						if(i > this.currentIndex - 1){
+						if(i >= (this.currentIndex - 1) * 2){
 							return "lightgray";
 						}
 						return "#cc0000";
 					})
 					.style("cursor", "pointer")
 					.on('click', (data, i) => {
-						this.currentIndex = i + 1;
+						if(!i){
+							this.currentIndex = 1;
+						} else if(i == (this.maxIndex - 1) * 2 - 1){
+							this.currentIndex = this.maxIndex;
+						} else {
+							this.currentIndex = Math.floor(i / 2) + 1;
+							if(i % 2){
+								this.currentIndex += 1;
+							}
+						}
 						this.colorSlide(this.currentIndex);
 						this.translateCircle(this.currentIndex);
 						this.revertHistory();
@@ -888,15 +898,15 @@ export class DiagramComponent implements OnInit {
 
 				let that = this;
 				function drag(){
-					let x = that.currentIndex * width;
+					let x = (that.currentIndex - 1) * (width * 2);
 					if(d3.event.x > 0 && d3.event.x <= width * data.length){
-						if(d3.event.x < x - width / 2 && x > width){
-							circle.attr("transform", "translate(" + (x - width) + ",0)");
+						if(d3.event.x < x - width){
+							circle.attr("transform", "translate(" + (x - (width * 2)) + ",0)");
 							that.currentIndex -= 1;
 							that.revertHistory();
 							that.colorSlide(that.currentIndex);
-						} else if(d3.event.x > x + width / 2){
-							circle.attr("transform", "translate(" + (x + width) + ",0)");
+						} else if(d3.event.x > x + width){
+							circle.attr("transform", "translate(" + (x + (width * 2)) + ",0)");
 							that.currentIndex += 1;
 							that.revertHistory();
 							that.colorSlide(that.currentIndex);
@@ -935,7 +945,8 @@ export class DiagramComponent implements OnInit {
 	}
 
 	translateCircle(i){
-		let width = (this.svg.node().clientWidth - 40) / this.maxIndex;
+		i -= 1;
+		let width = (this.svg.node().clientWidth - 40) / (this.maxIndex - 1);
 		d3.select("#slidehead").attr("transform", "translate(" + (i * width) + ",0)");
 	}
 	colorSlide(i){
@@ -944,7 +955,7 @@ export class DiagramComponent implements OnInit {
 		for(let j = 0; j < nodes.length; j++ ){
 			d3.select(nodes[j])
 				.attr("fill", function(){
-					if(j >= i) return "lightgray";
+					if(j >= (i - 1) * 2) return "lightgray";
 					return "#cc0000";
 				});
 		}
