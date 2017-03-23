@@ -35,6 +35,8 @@ export class DiagramComponent implements OnInit {
 	public showNodeTools: boolean;
 	public mirrorNode: any;
 	public nodeLocked: boolean = false;
+	public relLocked: boolean = false;
+	public relIndex: boolean = true;
 	public removeLocked: boolean = false;
 	public showSlider: boolean = false;
 	public playSlides: boolean = false;
@@ -286,10 +288,18 @@ export class DiagramComponent implements OnInit {
 			  .on("click", (node) => {
 			  	if(this.access != "Read Only"){
 			  		if(!this.removeLocked){
-					   	this.currentNode = node;
-					   	this.copyMirrorNode();
-					   	this.showNodeTools = true;
-					  	if(!this.mirrorNode.isLocked) { this.showTools = true; }
+					   	if(this.relLocked){
+					   		this.relIndex = !this.relIndex;
+					   		if(this.relIndex){
+					   			this.newR(this.currentNode.id, node.id)
+					   		}
+					   		this.currentNode = node;
+					   	} else {
+					   		this.currentNode = node;
+					   		this.copyMirrorNode();
+						   	this.showNodeTools = true;
+						  	if(!this.mirrorNode.isLocked) { this.showTools = true; }
+					  	}
 					  	this.ref.detectChanges();
 					  } else {
 					  	this.currentNode = node;
@@ -434,32 +444,18 @@ export class DiagramComponent implements OnInit {
 
 		function dragEndRing(n){
 			if(that.access === "Read Only") return;
-
-			let newRelationship = new Relationship();
 			if(closestNode){
-				newRelationship["startNode"] = n.id;
-				newRelationship["endNode"] = closestNode;
+				that.newR(n.id, closestNode);
 			} else {
 				let getId = that.dbref
 					.child('diagrams/' + that.currentDiagram + '/data/nodes')
 					.push(newNode);
 				getId.ref.update({
 					"id": getId.key
+				}).then(() => {
+					that.newR(n.id, getId.key);
 				});
-				newRelationship["startNode"] = n.id;
-				newRelationship["endNode"] = getId.key;
 			}
-			let rel = that.dbref
-				.child('diagrams/' + that.currentDiagram + '/data/relationships/')
-				.push(newRelationship);
-			that.dbref
-				.child('diagrams/' + that.currentDiagram + '/data/relationships/' + rel.key)
-				.update({
-					"id": rel.key
-				}).then(
-				(success) =>{
-					that.updateHistory();
-				});
 		}
 
 		function dragged(node) {
@@ -478,7 +474,8 @@ export class DiagramComponent implements OnInit {
 		}
 		function dragEnd(){
 			if(that.access === "Read Only") return;
-			if(Math.max(Math.abs(Math.abs(d3.event.x) - Math.abs(start[0])), Math.abs(Math.abs(d3.event.y) - Math.abs(start[1]))) > 10){ //prevent update on click event 
+			if(Math.max(Math.abs(Math.abs(d3.event.x) - Math.abs(start[0])), Math.abs(Math.abs(d3.event.y) - Math.abs(start[1]))) > 10){ 
+				// prevent dragend on click 
 				that.updateHistory();
 			}
 		}
@@ -730,6 +727,22 @@ export class DiagramComponent implements OnInit {
 		Relationship
 
 	*/
+	newR(startNode, endNode){
+		let newRelationship = new Relationship();
+		newRelationship["startNode"] = startNode;
+		newRelationship["endNode"] = endNode;
+		let rel = this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/')
+			.push(newRelationship);
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + rel.key)
+			.update({
+				"id": rel.key
+			}).then(
+			(success) =>{
+				this.updateHistory();
+			});
+	}
 	saveR(){
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)

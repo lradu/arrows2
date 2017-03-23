@@ -51,7 +51,6 @@ export class ProfileComponent {
             }).catch((err) => {
               this.error = err.message;
               this.ref.detectChanges();
-              console.log(this.error);
             });
         }
         if(formData.value.new) {
@@ -60,20 +59,16 @@ export class ProfileComponent {
               .then((success) => {
                 this.passSuccess = "Password update successfully.";
                 this.ref.detectChanges();
-                console.log("Password update successfully.");
               }).catch((err) => {
                 this.error = err.message;
                 this.ref.detectChanges();
-                console.log(err);
               })
           } else {
             this.error = "Passwords doesn't match.";
-            console.log(this.error);
           }
         }
     }).catch(
       (err) => {
-        console.log(err);
         this.error = err.message;
     })  
   }

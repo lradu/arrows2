@@ -27,15 +27,19 @@
 	margin-top: 144px;
 }
 .undo{
-	margin-top: 278px;
+	margin-top: 316px;
 }
 .play{
-	margin-top: 364px;
+	margin-top: 402px;
 }
 .tool {
 	display: flex;
 	position: absolute;
 	margin-left: 12px;
+}
+
+.pad-8 {
+  padding: 8px;
 }
 #diagram {
 	position: absolute;
