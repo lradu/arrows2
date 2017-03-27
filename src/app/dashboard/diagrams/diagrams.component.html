@@ -1,0 +1,43 @@
+  <div class="col-sm-12">
+    <div class="input-group mb-4">
+        <div class="input-group-addon"><i class="fa fa-search" aria-hidden="true"></i></div>
+        <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="Search" #filterInput (keyup)="filterDiagrams(filterInput.value)">
+        <button type="button" class="btn btn-secondary ml-4" (click)='addData.newDiagram(null, date)'><i class="fa fa-plus" aria-hidden="true"></i> Diagram</button>
+    </div>
+  </div>
+  <table class="table table-hover" id="diagrams-table">
+    <thead>
+      <tr>
+        <th (click)='sortDiagrams("access", !asc)'>
+          <i class="fa fa-arrow-down" aria-hidden="true" *ngIf='col=="access" && !asc'></i>
+          <i class="fa fa-arrow-up" aria-hidden="true" *ngIf='col=="access" && asc'></i> 
+          Access
+        </th>
+        <th (click)='sortDiagrams("title", !asc)'>
+          <i class="fa fa-arrow-down" aria-hidden="true" *ngIf='col=="title" && !asc'></i>
+          <i class="fa fa-arrow-up" aria-hidden="true" *ngIf='col=="title" && asc'></i>
+          Name
+        </th>
+        <th (click)='sortDiagrams("created", !asc)'>
+          <i class="fa fa-arrow-down" aria-hidden="true" *ngIf='col=="created" && !asc'></i>
+          <i class="fa fa-arrow-up" aria-hidden="true" *ngIf='col=="created" && asc'></i>
+          Created
+        </th>
+        <th (click)='sortDiagrams("lastUpdate", !asc)'>
+          <i class="fa fa-arrow-down" aria-hidden="true" *ngIf='col=="lastUpdate" && !asc'></i>
+          <i class="fa fa-arrow-up" aria-hidden="true" *ngIf='col=="lastUpdate" && asc'></i>
+          Last Update
+        </th>
+        <th ></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor='let d of diagrams' (click)="changeDiagram(d.key);"  class="active">
+        <td *ngIf='!d.hide'>{{ d.access }}</td>
+        <td *ngIf='!d.hide'>{{ d.title }}</td>
+        <td *ngIf='!d.hide'>{{ d.created }}</td>
+        <td *ngIf='!d.hide'>{{ d.lastUpdate }}</td>
+        <td *ngIf='!d.hide'><i class="fa fa-times" aria-hidden="true" (click)="onEvent($event); removeDiagram(d.key, d.access);"></i></td>
+      </tr>
+    </tbody>
+  </table>

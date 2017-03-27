@@ -3,15 +3,17 @@ import { AngularFire, FirebaseApp } from 'angularfire2'
 import { Router } from '@angular/router';
 
 import { DiagramComponent } from './diagram/diagram.component';
+import { DiagramsComponent } from './diagrams/diagrams.component';
 import { Node } from './diagram/graph/node';
 import { ExportData } from './dashboard.service';
+import { AddData } from './diagram/diagram.service';
 import * as d3 from 'd3';
 
 @Component({
   selector: 'dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
-  providers: [ExportData]
+  providers: [ExportData, AddData]
 })
 
 export class DashboardComponent {
@@ -21,13 +23,9 @@ export class DashboardComponent {
 	public title: string;
 	public users: any;
 	public error: any;
-	public diagrams: any;
-	public diagramsKey: any;
 	public currentDiagram: string;
 	public access: string;
 
-	public asc: boolean;
-	public col: string;
 	public date: string;
 
 	public importFileName: string = "Choose file...";
@@ -42,40 +40,16 @@ export class DashboardComponent {
 		@Inject(FirebaseApp) firebase: any,
 		private router: Router,
 		private ref: ChangeDetectorRef,
-		private exportData: ExportData
+		private exportData: ExportData,
+		private addData: AddData
 		) {
 			this.dbref = firebase.database().ref();
 			this.user = firebase.auth().currentUser;
-			this.diagramsKey = {};
-			this.diagrams = [];
 			this.date = new Date().toLocaleDateString();
 			this.loadData();
 	}
 
 	loadData(){
-		this.dbref
-			.child('users/' + this.user.uid )
-			.once('value', 
-			(snap) => { 
-				//diagrams
-				for(let key in snap.val().diagrams){
-					this.dbref
-						.child('diagrams/' + key)
-						.on('value',
-						(snapShot) => {
-							if(snapShot.val()){
-								let item = snapShot.child('info').val();
-								item['access'] = snapShot.child('users/' + this.user.uid + '/access').val();
-								item['key'] = snapShot.key;
-								this.diagramsKey[key] = item;
-								this.sortDiagrams(snap.val().sortAccess.col, snap.val().sortAccess.asc);
-							} else {
-								delete this.diagramsKey[snapShot.key];
-								this.sortDiagrams(snap.val().sortAccess.col, snap.val().sortAccess.asc);
-							}
-						})
-				}
-		});
 		this.dbref
 			.child('users/' + this.user.uid + '/currentDiagram')
 			.on('value',
@@ -127,118 +101,6 @@ export class DashboardComponent {
 				});
 	}
 
-	sortDiagrams(col, asc){  //todo: create a pipe 
-		this.diagrams = [];
-		this.asc = asc;
-		this.col = col;
-		this.dbref
-			.child('users/' + this.user.uid +'/sortAccess')
-			.update({
-				"asc": asc,
-				"col": col
-			});
-
-		for(let d in this.diagramsKey){
-			this.diagrams.push(this.diagramsKey[d]);
-		}
-		this.diagrams.sort(function(a, b) {
-			return asc ? (a[col].toLowerCase() < b[col].toLowerCase()) : (a[col].toLowerCase() > b[col].toLowerCase());
-		});
-		this.ref.detectChanges();
-	}
-
-	filterDiagrams(value){
-		let reg = new RegExp(value.split('').join('\\w*'), 'i');
-		this.diagrams.forEach(function(item){
-			item.hide = true;
-		});
-		this.diagrams.filter(function(item){
-			if(item.title.match(reg)){
-				item["hide"] = '';
-			}
-		})
-	}
-
-	newDiagram(nodes){
-		let l = {};
-		if(nodes){
-			for(let n of nodes){
-				l[n.id] = n;
-			}
-		} else {
-			l["firstNode"] = new Node();
-		}
-		this.dbref.child('diagrams/').push({
-			"data": {
-				"nodes": l
-			},
-			"info" : {
-        "created" : this.date,
-        "lastUpdate" : this.date,
-        "title" : "My new diagram"
-      },
-      "users" : {
-        [this.user.uid] : {
-          "access" : "Owner",
-          "dateAdded" : this.date,
-          "email" : this.user.email,
-          "lastUpdate" : this.date
-        }
-      }
-		}).then(
-			(newD) => {
-				this.dbref
-					.child('users/' + this.user.uid + '/diagrams')
-					.update({
-						[newD.key]: true
-				});
-				newD.on('value', 
-					(snap) => {
-						if(snap.val()){
-							this.dbref
-								.child('users/' + this.user.uid)
-								.update({
-									"currentDiagram": newD.key
-								})
-							let item = snap.child('info').val();
-							item['access'] = snap.child('users/' + this.user.uid + '/access').val();
-							item['key'] = snap.key;
-							this.diagramsKey[newD.key] = item;
-							this.sortDiagrams(this.col, this.asc);
-						} else {
-							delete this.diagramsKey[snap.key];
-							this.sortDiagrams(this.col, this.asc);
-						}
-					}
-				);
-			}
-		);
-	}
-
-	removeDiagram(diagram, access){
-		if(access=='Owner'){
-			//only the owner can remove the diagram
-			this.dbref
-				.child('diagrams/' + diagram)
-				.remove();
-			} else {
-				//the editor, read only user can remove himself from the diagram
-				this.dbref
-					.child('diagrams/' + diagram + '/users/' + this.user.uid)
-					.remove();
-			}
-		this.dbref
-			.child('users/' + this.user.uid + '/diagrams/' + diagram)
-			.remove();
-	}
-
-	changeDiagram(diagram){
-		this.dbref
-			.child('users/' + this.user.uid)
-			.update({
-				"currentDiagram": diagram
-			})
-	}
 
 	changeTitle(title){
 		this.dbref
@@ -353,7 +215,9 @@ export class DashboardComponent {
 						}
 					}
 					if(nodes.length){
-						this.importData = nodes; 
+						this.importData = {
+							"nodes": nodes
+						}; 
 						this.importReady = "Import";
 					} else {
 						this.importError = "Wrong data format.";
@@ -365,7 +229,7 @@ export class DashboardComponent {
 	}
 	importNodes(){
 		this.importReady = "Importing...";
-		this.newDiagram(this.importData);
+		this.addData.newDiagram(this.importData, this.date);
 		this.importReady = "";
 		this.importFileName = "Choose file...";
 		this.importSuccess = "Success.";

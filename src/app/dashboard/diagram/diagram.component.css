@@ -6,10 +6,23 @@
 	height: calc(100% - 60px);
 	z-index: 1;
 }
+#diagram-tools {
+  position: absolute;
+  margin-top: 20px;
+}
+#diagram-tools .btn-tool {
+  width: 55px;
+  border: none;
+  border-radius: 0;
+  background-color: #f7f7f7;
+}
+#diagram-tools .btn-tool:hover{
+  background-color: lightgray;
+}
 
 #mirrorNode {
 	position: absolute;
-	margin-left: 52px;
+	margin-left: 58px;
 	height: 28px;
 	width: 28px;
 	background-color: white;
@@ -17,30 +30,7 @@
 	border-radius: 14px;
 	text-align: center;
 }
-.zoom {
-	margin-top: 10px;
-}
-.fit{
-	margin-top: 96px;
-}
-.node {
-	margin-top: 144px;
-}
-.undo{
-	margin-top: 316px;
-}
-.play{
-	margin-top: 402px;
-}
-.tool {
-	display: flex;
-	position: absolute;
-	margin-left: 12px;
-}
 
-.pad-8 {
-  padding: 8px;
-}
 #diagram {
 	position: absolute;
 	width: 100%;
