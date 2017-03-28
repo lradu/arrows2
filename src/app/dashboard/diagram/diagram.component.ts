@@ -844,7 +844,6 @@ export class DiagramComponent implements OnInit {
 					}
 				});
 	}
-
 	/*
 
 		Slider
@@ -858,7 +857,8 @@ export class DiagramComponent implements OnInit {
 					return;
 				} 
 				let data = new Array((snap.numChildren() - 1) * 2);
-				let width = (this.svg.node().clientWidth - 40) / data.length;
+				let fullWidth = this.svg.node().clientWidth || this.svg.node().parentNode.clientWidth;
+				let width = (fullWidth - 40) / data.length;
 				let x = -width;
 				let g = d3.select("#gslider");
 				g.selectAll("rect")
@@ -959,7 +959,8 @@ export class DiagramComponent implements OnInit {
 
 	translateCircle(i){
 		i -= 1;
-		let width = (this.svg.node().clientWidth - 40) / (this.maxIndex - 1);
+		let fullWidth = this.svg.node().clientWidth || this.svg.node().parentNode.clientWidth;
+		let width = (fullWidth - 40) / (this.maxIndex - 1);
 		d3.select("#slidehead").attr("transform", "translate(" + (i * width) + ",0)");
 	}
 	colorSlide(i){

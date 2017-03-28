@@ -8,10 +8,8 @@ nav a {
 }
 
 svg.graph {
-	min-height: 402px;
+	min-height: 420px;
 	width: 100%;
 	height: 100%;
 	font-family: "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
 }
-
-

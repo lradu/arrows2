@@ -32,42 +32,7 @@
           <i class="fa fa-share-square-o" aria-hidden="true"></i> Share
         </a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="users" (click)="onEvent($event)">
-          <div class="col-lg-10 mb-4" *ngIf='access=="Owner"'>
-              <div class="input-group">
-                <input type="email" class="form-control" placeholder="Email" #emailInput>
-                <span class="input-group-btn">
-                <select class="custom-select btn" #accessInput>
-                  <option>Owner</option>
-                  <option>Editor</option>
-                  <option>Read Only</option>
-                </select>
-                </span>
-                <button class="btn btn-primary" type="button" (click)='inviteUser(emailInput.value, accessInput.value)'>Invite</button>
-              </div>
-          </div>
-          <div class="col-lg-10 alert alert-danger" role="alert" *ngIf="error">
-            {{ error }}
-          </div>
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Access</th>
-                <th>Email</th>
-                <th>Added</th>
-                <th>Last Update</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor='let d of users'>
-                <td>{{ d.access }}</td>
-                <td>{{ d.email }}</td>
-                <td>{{ d.dateAdded }}</td>
-                <td>{{ d.lastUpdate }}</td>
-                <td *ngIf='access=="Owner" && users.length > 1'><i class="fa fa-times" aria-hidden="true" (click)="removeUser(d.email)"></i></td>
-              </tr>
-            </tbody>
-          </table>
+          <access></access>
         </div>
       </li>
     </ul>

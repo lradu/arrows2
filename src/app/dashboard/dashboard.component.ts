@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 
 import { DiagramComponent } from './diagram/diagram.component';
 import { DiagramsComponent } from './diagrams/diagrams.component';
+import { AccessComponent } from './access/access.component';
+
 import { Node } from './diagram/graph/node';
 import { ExportData } from './dashboard.service';
 import { AddData } from './diagram/diagram.service';
@@ -21,11 +23,7 @@ export class DashboardComponent {
 	public user: any;
 
 	public title: string;
-	public users: any;
-	public error: any;
 	public currentDiagram: string;
-	public access: string;
-
 	public date: string;
 
 	public importFileName: string = "Choose file...";
@@ -73,31 +71,6 @@ export class DashboardComponent {
 								this.ref.detectChanges();
 							}
 						});
-					//users
-					this.dbref
-						.child('diagrams/' + snap.val() + '/users') 
-						.on('value', 
-						(snapShot) => {
-							if(this.currentDiagram == snapShot.ref.parent.key){
-								let owner = [];
-								let edit = [];
-								let read = [];
-								for(let key in snapShot.val()) { //todo - improve this
-									if(key==this.user.uid){
-										this.access = snapShot.val()[key].access;
-									}
-									if(snapShot.val()[key].access == 'Owner'){
-										owner.push(snapShot.val()[key]);
-									} else if(snapShot.val()[key].access == 'Editor'){
-										edit.push(snapShot.val()[key]);
-									} else {
-										read.push(snapShot.val()[key]);
-									}
-									this.users = owner.concat(edit, read);  
-									this.ref.detectChanges();
-								}
-							}
-						}); 
 				});
 	}
 
@@ -110,60 +83,8 @@ export class DashboardComponent {
 			})
 	}
 
-	inviteUser(email, access){
-		if(email == this.user.email){
-			this.error = "You cannot change your status.";
-			setTimeout(() => {
-				this.error = '';
-			}, 3000);
-		} else {
-			this.dbref
-				.child('users')
-				.orderByChild('email')
-				.equalTo(email)
-				.once('value',
-					(snap) => {
-						if(snap.val()){
-							snap.forEach((snapChild) =>{
-								snapChild.ref.child('diagrams').update({
-									[this.currentDiagram]: true
-								});
-								this.dbref
-									.child('diagrams/' + this.currentDiagram + '/users')
-									.update({
-										[snapChild.key]: {
-											"access": access,
-											"email": email,
-											"dateAdded": this.date,
-											"lastUpdate": this.date
-										}
-									});
-							});
-						} else {
-							this.error = "User doesn't exist.";
-							setTimeout(() => {
-								this.error = '';
-							}, 3000);
-							this.ref.detectChanges();
-						}
-					});
-		}
-	}
 
-	removeUser(email){
-		this.dbref
-			.child('users')
-			.orderByChild('email')
-			.equalTo(email)
-			.once('value',
-				(snap) => {
-					snap.forEach((snapChild) =>{
-						snapChild.ref.child('diagrams/' + this.currentDiagram).remove();
-						this.dbref
-							.child('diagrams/' + this.currentDiagram + '/users/' + snapChild.key).remove();
-					});
-				});
-	}
+
 	downloadSample(){
 		let head = "caption,id,isRectangle,properties_text,properties_width,radius,style_color,style_fill,style_stroke,style_strokeWidth,x,y\r\n";
 		let csv = document.createElement('a');
