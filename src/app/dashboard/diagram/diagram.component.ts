@@ -1,4 +1,4 @@
-import { Component, Inject, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, Inject, ChangeDetectorRef, AfterContentInit  } from '@angular/core';
 import { AngularFire, FirebaseApp } from 'angularfire2';
 import * as d3 from 'd3'; 
 
@@ -12,7 +12,7 @@ import { Relationship } from './graph/relationship';
   styleUrls: ['./diagram.component.css']
 })
 
-export class DiagramComponent implements OnInit {
+export class DiagramComponent implements AfterContentInit  {
 	public svg: any;
 	public gNodes: any;
 	public gCaptions: any;
@@ -57,7 +57,7 @@ export class DiagramComponent implements OnInit {
 			}
 	}
 
-	ngOnInit(){
+	ngAfterContentInit(){
 		this.svg = d3.select("#diagram")
 			.append("svg")
 				.attr("class", "graph");
@@ -140,7 +140,7 @@ export class DiagramComponent implements OnInit {
 	renderNodes(){
 		let nodes = this.gNodes.selectAll("rect.node")
 		  .data(this.model.nodes)
-		nodes.remove()
+
 		nodes.enter()
 			.append("rect")
 		  	.attr("class", "node")
@@ -154,6 +154,7 @@ export class DiagramComponent implements OnInit {
 		   	.attr("stroke", function(node) { return node.style.stroke })
 		   	.attr("stroke-width", function(node) { return node.style.strokeWidth })
 		   	.style("color", function(node) { return node.style.color });
+
 		nodes.enter()
 			.append("path")
 				.attr("class", "node properties")
@@ -166,7 +167,8 @@ export class DiagramComponent implements OnInit {
 				})
 				.attr("d", function(node){
 					if(node.properties.text){
-						let l = node.properties.text.split("\n").length;
+						node["lines"] = node.properties.text.split("\n");
+						let l = node.lines.length;
 						return "M 0 0" +
 						"L 20 -10" +
 						"L 20 " + -(l * 25) +
@@ -182,22 +184,41 @@ export class DiagramComponent implements OnInit {
 					}
 				})
 				.attr("fill", "white")
-				.attr("stroke", "black")
+				.attr("stroke", "#333333")
 				.attr("stroke-width", 2);
-		nodes.enter()
+		let gProperties = nodes.enter()
+			.append("g")
+			.attr("class", "properties");
+		gProperties.selectAll("text")
+			.enter()	
+			.data(function(node) { if(node.lines){
+				let list = [];
+				for(let i = 0; i < node.lines.length; i++){;
+					list.push({
+						"text": node.lines[i],
+						"x": node.x + 2 * node.radius + node.properties.width + 10,
+						"y": node.y + node.radius + (i - node.lines.length) * 25 + (i + 1) * 25,
+						"color": node.style.color
+					});
+				}
+				return list;
+			} else {
+				return [];
+			}})
+			.enter()
 			.append("text")
-				.attr("x", function(node) { return (node.x + 2 * node.radius + node.properties.width + 10); })
-				.attr("y", function(node) { return node.y + node.radius; })
-				.attr("fill", function(node) { return node.style.color })
-				.attr("class", "node-properties-text")
+				.attr("x", function(p) { return p.x; })
+				.attr("y", function(p) { return p.y; })
+				.attr("fill", function(p) { return p.color; })
+				.attr("class", "properties")
 				.attr("text-anchor", "middle")
 				.attr("font-size",  "50px")
 				.attr("alignment-baseline", "central")
-				.text(function(node) { return node.properties.text; })
+				.text(function(p) { return p.text; });				
 
 		let captions = this.gCaptions.selectAll("text.node.caption")
 			.data(this.model.nodes)
-		captions.remove()
+
 		captions.enter()
 			.append("text")
 				.attr("x", function(node) { return node.x + node.radius; })
@@ -211,35 +232,126 @@ export class DiagramComponent implements OnInit {
 	}
 	renderRelationships(){
 		let that = this;
-		this.groupRelationships();
+		let gRel = this.gRelationships.selectAll("g.groups")
+			.data(this.model.relationships);
 
-		let rel = this.gRelationships.selectAll("g.groups")
-			.data(that.groups);
-		rel.remove();
-		rel.enter()
+		let rel = gRel.enter()
 			.append("g")
 				.attr("class", "groups")
 		 	  .selectAll("g.relationships")
 				.data(function(d) { return d; })
-				.remove()
-		 	  .enter()
-				.append("path")
-					.attr("class", "relationships")
-					.attr("transform", function(rl) {
-						return "translate("
-						+ (rl.source.x + rl.source.radius)
-						+ ","
-						+ (rl.source.y + rl.source.radius)
-						+ ")" + "rotate(" + rl.angle + ")";
-					})
-					.attr("d", function(rl) {
-						if(rl.offset){
-							return that.curvedArrow(rl.source.radius + 12, rl.target.radius, rl.distance, rl.offset, 5, 20, 20).outline;
-						} else {
-							return that.horizontalArrow(rl.source.radius + 12, rl.distance - rl.target.radius, 5).outline;
-						}
-					})
-					.attr("fill", function(rl) { return rl.style.fill; });    	
+		 		
+		rel.enter()
+			.append("path")
+				.attr("class", "relationships")
+				.attr("transform", function(rl) {
+					return "translate("
+					+ (rl.source.x + rl.source.radius)
+					+ ","
+					+ (rl.source.y + rl.source.radius)
+					+ ")" + "rotate(" + rl.angle + ")";
+				})
+				.attr("d", function(rl, i) {
+					if(i){
+						rl["position"] = that.curvedArrow(rl.source.radius + 12, rl.target.radius, rl.distance, i * 10, 5, 20, 20);
+						rl["d"] = rl.position.outline;
+						return rl.position.outline;
+					} else {
+						rl["position"]  = that.horizontalArrow(rl.source.radius + 12, rl.distance - rl.target.radius, 5);
+						rl["d"] = rl.position.outline;
+						return rl.position.outline;
+					}
+				})
+				.attr("fill", function(rl) { return rl.style.fill; })
+				
+		rel.enter()
+			.append("text")
+				.attr("x", function(rl) { return rl.position.apex.x; })
+				.attr("y", function(rl) { return rl.position.apex.y; })
+				.attr("transform", function(rl) {
+					return "translate("
+					+ (rl.source.x + rl.source.radius)
+					+ ","
+					+ (rl.source.y + rl.source.radius)
+					+ ")" + "rotate(" + rl.angle + ")";
+				})
+				.attr("fill", "#ffffff")
+				.attr("stroke", "black")
+				.attr("stroke-width", 2)
+				.attr("class", "node caption")
+				.attr("text-anchor", "middle")
+				.attr("font-size",  "50px")
+				.attr("alignment-baseline", "central")
+				.text(function(rl) { return rl.type; });
+
+		rel.enter()
+			.append("path")
+				.attr("class", "node properties")
+				.attr("transform", function(rl) {
+					return "translate("
+					+ (rl.source.x + rl.source.radius + rl.position.apex.x)
+					+ ","
+					+ (rl.source.y + rl.source.radius + rl.position.apex.y)
+					+ ")";
+				})
+				.attr("d", function(rl){
+					if(rl.properties.text){
+						rl["lines"] = rl.properties.text.split("\n");
+						let l = rl.lines.length;
+						return "M 0 0" +
+						"L 20 -10" +
+						"L 20 " + -(l * 25) +
+						"A 10 10 0 0 1 30" + -(l * 25 + 10) +
+			 			"L " + (rl.properties.width * 2)  + " " + -(l * 25 + 10) +
+						"A 10 10 0 0 1 " + (rl.properties.width * 2 + 10) + " " + -(l * 25) +
+						"L " + (rl.properties.width * 2 + 10) + " " + (l * 25) +
+						"A 10 10 0 0 1 " + (rl.properties.width * 2) + " " + (l * 25 + 10) +
+						"L 30 " + (l * 25 + 10) +
+						"A 10 10 0 0 1 20 " + (l * 25) +
+						"L 20 10" +
+						"Z";
+					}
+				})
+				.attr("fill", "white")
+				.attr("stroke", "#333333")
+				.attr("stroke-width", 2);
+
+		let gProperties = rel.enter()
+			.append("g")
+			.attr("class", "properties");
+		gProperties.selectAll("text")
+			.enter()	
+			.data(function(rl) { if(rl.lines){
+				let list = [];
+				for(let i = 0; i < rl.lines.length; i++){;
+					list.push({
+						"text": rl.lines[i],
+						"x": rl.position.apex.x,
+						"y": rl.position.apex.y + (i - rl.lines.length) * 25 + (i + 1) * 25,
+						"color": rl.style.fill,
+						"tx": rl.source.x + rl.source.radius,
+						"ty": rl.source.y + rl.source.radius,
+						"angle": rl.angle
+					});
+				}
+				return list;
+			} else {
+				return [];
+			}})
+			.enter()
+			.append("text")
+				.attr("x", function(p) { return p.x; })
+				.attr("y", function(p) { return p.y - 100; })
+				.attr("transform", function(p) {
+					return "translate(" + p.tx + "," + p.ty + ")" + "rotate(" + p.angle + ")";
+				})
+				.attr("fill", function(p) { return p.color; })
+				.attr("class", "properties")
+				.attr("text-anchor", "middle")
+				.attr("font-size",  "50px")
+				.attr("alignment-baseline", "central")
+				.text(function(p) { return p.text; });
+
 	}
 	renderOverlay(){
 		let that = this;
@@ -256,7 +368,6 @@ export class DiagramComponent implements OnInit {
 			})
 		this.gNodes.selectAll("rect.newNode")
 			.data([newNode])
-			.remove()
 			.enter()
 				.append("rect")
 					.attr("class", "newNode")
@@ -265,14 +376,13 @@ export class DiagramComponent implements OnInit {
 					.attr("fill", "none");
 		this.gRelationships.selectAll("path.newRelationship")
 			.data([newNode])
-			.remove()
 			.enter()
 			.append("path")
 				.attr("class", "newRelationship");
 
 		let nodeOverlays = this.gOverlay.selectAll("rect.node")
 			.data(this.model.nodes)
-		nodeOverlays.remove()
+
 		nodeOverlays.enter()
 			.append("rect")
 				.attr("class", "node")
@@ -313,14 +423,13 @@ export class DiagramComponent implements OnInit {
 			  	.on("end", dragEnd));
 
 		let relOverlays = this.gOverlay.selectAll("g.groups")
-			.data(that.groups);
-		relOverlays.remove();
+			.data(this.model.relationships);
+
 		relOverlays.enter()
 			.append("g")
 				.attr("class", "groups")
 		 	  .selectAll("g.relationships")
 				.data(function(d) { return d; })
-				.remove()
 		 	  .enter()
 				.append("path")
 					.attr("class", "relationships")
@@ -331,13 +440,8 @@ export class DiagramComponent implements OnInit {
 						+ (rl.source.y + rl.source.radius)
 						+ ")" + "rotate(" + rl.angle + ")";
 					})
-					.attr("d", function(rl) {
-						if(rl.offset){
-							return that.curvedArrow(rl.source.radius + 12, rl.target.radius, rl.distance, rl.offset, 5, 20, 20).outline;
-						} else {
-							return that.horizontalArrow(rl.source.radius + 12, rl.distance - rl.target.radius, 5).outline;
-						}
-					})
+					.attr("d", function(rl) { return rl.d; })
+					.attr("fill", "rgba(255, 255, 255, 0)")
 					.attr("stroke-width", 5)
 					.attr("stroke", "rgba(255, 255, 255, 0)")
 					.on("mouseover", mRingOver)
@@ -358,7 +462,7 @@ export class DiagramComponent implements OnInit {
 
 		let nodeRing = this.gOverlay.selectAll('rect.ring')
 			.data(this.model.nodes)
-		nodeRing.remove()
+
 		nodeRing.enter()
 			.append("rect")
 				.attr("class", "node ring")
@@ -484,28 +588,6 @@ export class DiagramComponent implements OnInit {
 	/*
 		Arrows
 	*/
-	groupRelationships(){
-		this.groups = [];
-		let gr = {};
-		for(let r of this.model.relationships){
-			let source = this.model.nodes.find( x => x.id == r.startNode);
-			let target = this.model.nodes.find( x => x.id == r.endNode);
-			r["source"] = source;
-			r["target"] = target;
-			r["angle"] = source.angleTo(target);
-			r["distance"] = source.distanceTo(target) - 12;
-			let key = r.startNode < r.endNode ? r.startNode + r.endNode:r.endNode + r.startNode;
-			let g = gr[key]
-			if(g){
-				r["offset"] = g.length * 10;
-				g.push(r)
-			} else {
-				r["offset"] = 0;
-				gr[key] = [r];
-			}
-		}
-		for(let g in gr) { this.groups.push(gr[g])};
-	}
 	horizontalArrow(start, end, arrowWidth) {
 	    let shaftRadius = arrowWidth / 2;
 	    let headRadius = arrowWidth * 2;
@@ -649,18 +731,14 @@ export class DiagramComponent implements OnInit {
 		});
 	}
 	saveNode() {
-		let g = this.svg.append("g");
-		let txt = g.append("text")
-			.attr("font-size",  "50px");
-		this.currentNode.radius = getTxtLength(this.currentNode.caption);
-		this.currentNode.properties.width = getTxtLength(this.currentNode.properties.text);
-		//console.log(this.currentNode.properties.text.split("\n"));
-		g.remove();
-		function getTxtLength(t){
-			txt.text(t);
-			let size = txt.node().getComputedTextLength() / 2 + 20;
-			return size < 50 ? 50:size;
+		let maxline = "";
+		for(let l of this.currentNode.properties.text.split("\n")){
+			if(maxline.length < l.length){
+				maxline = l;
+			}
 		}
+		this.currentNode.radius = this.getTxtLength(this.currentNode.caption);
+		this.currentNode.properties.width = this.getTxtLength(maxline);
 
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data/nodes/' + this.currentNode.id)
@@ -708,6 +786,17 @@ export class DiagramComponent implements OnInit {
 		this.showTools = false;
 		this.ref.detectChanges();
 	}
+
+	getTxtLength(text){
+		let g = this.svg.append("g");
+		let txt = g.append("text")
+			.attr("font-size",  "50px")
+			.text(text);
+		let size = txt.node().getComputedTextLength() / 2 + 20;
+		g.remove();
+
+		return size < 50 ? 50:size;
+	}
 	
 	copyMirrorNode(){
 		if(this.mirrorNode.isLocked){
@@ -731,11 +820,12 @@ export class DiagramComponent implements OnInit {
 		let newRelationship = new Relationship();
 		newRelationship["startNode"] = startNode;
 		newRelationship["endNode"] = endNode;
+		let key = startNode < endNode ? startNode + endNode:endNode + startNode;
 		let rel = this.dbref
-			.child('diagrams/' + this.currentDiagram + '/data/relationships/')
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + key)
 			.push(newRelationship);
 		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + rel.key)
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + key + "/" + rel.key)
 			.update({
 				"id": rel.key
 			}).then(
@@ -744,11 +834,19 @@ export class DiagramComponent implements OnInit {
 			});
 	}
 	saveR(){
+		let maxline = "";
+		for(let l of this.currentR.properties.text.split("\n")){
+			if(maxline.length < l.length){
+				maxline = l;
+			}
+		}
+		this.currentR.properties.width = this.getTxtLength(maxline);
 		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.group + "/" + this.currentR.id)
 			.update({
 				"type": this.currentR.type,
-				"style": this.currentR.style
+				"style": this.currentR.style,
+				"properties": this.currentR.properties
 			}).then(
 		(success) =>{
 			this.updateHistory();
@@ -759,7 +857,7 @@ export class DiagramComponent implements OnInit {
 
 	deleteR(){
 		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.group + "/" + this.currentR.id)
 			.remove()
 			.then(
 			(success) =>{
@@ -770,11 +868,9 @@ export class DiagramComponent implements OnInit {
 	}
 
 	reverseR(){
-		let swap = this.currentR.startNode;
-		this.currentR.startNode = this.currentR.endNode;
-		this.currentR.endNode = swap;
+		this.currentR.reverse();
 		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.id)
+			.child('diagrams/' + this.currentDiagram + '/data/relationships/' + this.currentR.group + "/" + this.currentR.id)
 			.update({
 				"startNode": this.currentR.startNode,
 				"endNode": this.currentR.endNode

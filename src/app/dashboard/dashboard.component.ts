@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, AfterContentInit, Inject, ChangeDetectorRef } from '@angular/core';
 import { AngularFire, FirebaseApp } from 'angularfire2'
 import { Router } from '@angular/router';
 
@@ -18,7 +18,7 @@ import * as d3 from 'd3';
   providers: [ExportData, AddData]
 })
 
-export class DashboardComponent {
+export class DashboardComponent implements AfterContentInit {
 	public dbref: any;
 	public user: any;
 
@@ -41,13 +41,12 @@ export class DashboardComponent {
 		private exportData: ExportData,
 		private addData: AddData
 		) {
-			this.dbref = firebase.database().ref();
-			this.user = firebase.auth().currentUser;
-			this.date = new Date().toLocaleDateString();
-			this.loadData();
+		this.dbref = firebase.database().ref();
+		this.user = firebase.auth().currentUser;
+		this.date = new Date().toLocaleDateString();
 	}
-
-	loadData(){
+	
+	ngAfterContentInit(){
 		this.dbref
 			.child('users/' + this.user.uid + '/currentDiagram')
 			.on('value',
@@ -74,7 +73,6 @@ export class DashboardComponent {
 				});
 	}
 
-
 	changeTitle(title){
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/info')
@@ -82,9 +80,7 @@ export class DashboardComponent {
 				"title": title
 			})
 	}
-
-
-
+	
 	downloadSample(){
 		let head = "caption,id,isRectangle,properties_text,properties_width,radius,style_color,style_fill,style_stroke,style_strokeWidth,x,y\r\n";
 		let csv = document.createElement('a');

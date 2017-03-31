@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, AfterContentInit, Inject, ChangeDetectorRef } from '@angular/core';
 import { FirebaseApp } from 'angularfire2'
 import { AddData } from '../diagram/diagram.service';
 
@@ -8,7 +8,7 @@ import { AddData } from '../diagram/diagram.service';
   styleUrls: ['./diagrams.component.css'],
   providers: [AddData]
 })
-export class DiagramsComponent implements OnInit {
+export class DiagramsComponent implements AfterContentInit {
 	public dbref: any;
 	public user: any;
 
@@ -31,7 +31,7 @@ export class DiagramsComponent implements OnInit {
   	this.diagrams = [];
   }
 
-  ngOnInit() {
+  ngAfterContentInit() {
   	//get diagrams list
   	this.dbref
   		.child('users/' + this.user.uid + '/sortAccess')

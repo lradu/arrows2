@@ -12,6 +12,15 @@ export class ExportData {
 
 	csv(data, name): void {
 		let ar = "";
+		if(name == "relationships") {
+			let d = {};
+			for(let g in data){
+				for(let r in data[g]){
+					d[r] = data[g][r];
+				}
+			}
+			data = d;
+		}
 		getData(data)
 		let csv = document.createElement('a');
 		let csvContent = ar;
@@ -69,8 +78,10 @@ export class ExportData {
 		for(let key in nodes){
 			lines.push("(`" + key + "`:`" + (nodes[key].caption || "Node") + "`)"); //(nodes[key].properties.text ? "` {`" + nodes[key].properties.text + "`})")
 		}
-		for(let key in rel){
-			lines.push("(`" + rel[key].startNode + "`)-[:`" + (rel[key].type || "RELATED_TO") + "`]->(`" + rel[key].endNode + "`)");
+		for(let g in rel){
+			for(let key in rel[g]){
+				lines.push("(`" + rel[g][key].startNode + "`)-[:`" + (rel[g][key].type || "RELATED_TO") + "`]->(`" + rel[g][key].endNode + "`)");
+			}
 		}
 		if(lines.length != 0) {
 			let style = `<style>
@@ -136,12 +147,14 @@ export class ExportData {
 				'">' + (nodes[key].caption ? '\n	<span class="caption">' + nodes[key].caption + "</span>\n":"") +
 				"</li>\n";
 		}
-		for(let key in rel){
-			markup += '<li class="relationship" ' +
-				'data-from="' + rel[key].startNode +
-				'" data-to="' + rel[key].endNode +
-				'">' + (rel[key].type ? '\n	<span class="type">' + rel[key].type + "</span>\n":"") +
-				"</li>\n";
+		for(let g in rel){
+			for(let key in rel[g]){
+				markup += '<li class="relationship" ' +
+					'data-from="' + rel[g][key].startNode +
+					'" data-to="' + rel[g][key].endNode +
+					'">' + (rel[g][key].type ? '\n	<span class="type">' + rel[g][key].type + "</span>\n":"") +
+					"</li>\n";
+			}
 		}
 		markup += '</ul></textarea>'
 		let x = window.open();

@@ -6,6 +6,10 @@ export class Relationship {
 	public endNode: string;
 	public style: any;
 	public id: string;
+	public source: any;
+	public target: any;
+	public angle: any;
+	public distance: any;
 
 	constructor (){
 		this.id = "firstRelationship"; 
@@ -19,6 +23,10 @@ export class Relationship {
 			"width": 50,
 			"text": ""
 		};
+		this.source = {};
+		this.target = {};
+		this.angle = 0;
+		this.distance = 0;
 	}
 
 	public reverse() {
