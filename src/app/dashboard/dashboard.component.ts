@@ -1,4 +1,4 @@
-import { Component, AfterContentInit, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, AfterViewInit, Inject, ChangeDetectorRef } from '@angular/core';
 import { AngularFire, FirebaseApp } from 'angularfire2'
 import { Router } from '@angular/router';
 
@@ -18,7 +18,7 @@ import * as d3 from 'd3';
   providers: [ExportData, AddData]
 })
 
-export class DashboardComponent implements AfterContentInit {
+export class DashboardComponent implements AfterViewInit {
 	public dbref: any;
 	public user: any;
 
@@ -46,7 +46,7 @@ export class DashboardComponent implements AfterContentInit {
 		this.date = new Date().toLocaleDateString();
 	}
 	
-	ngAfterContentInit(){
+	ngAfterViewInit(){
 		this.dbref
 			.child('users/' + this.user.uid + '/currentDiagram')
 			.on('value',

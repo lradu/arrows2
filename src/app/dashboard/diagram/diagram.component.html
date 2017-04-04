@@ -1,26 +1,3 @@
-<div class="modal fade bd-example-modal-lg" id="branchModal" tabindex="-1" role="dialog" aria-labelledby="branchModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="branchModalLabel">Create branch</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-      	<div class="form-group">
-      	   <label for="newBranchDiagram">Diagram title</label>
-      	   <input type="text" class="form-control col-6" id="newBranchDiagram" #newBranchTitle value="New diagram">
-      	 </div>
-      	 <button type="button" class="btn btn-primary mb-2" data-dismiss="modal" (click)="createBranch(newBranchTitle.value, 0)">Create and go to new diagram</button>
-      	 <button type="button" class="btn btn-primary mb-2" data-dismiss="modal" (click)="createBranch(newBranchTitle.value, 1)">Create and stay here</button>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>       
-      </div>
-    </div>
-  </div>
-</div>
 <div id="diagram">
 </div>
 <div id="tools" class="col-lg-3 col-md-4 col-xs-12 offset-lg-9 offset-md-8" *ngIf="showTools">
@@ -117,28 +94,9 @@
 	  <div *ngIf="nodeLocked || mirrorNode.isLocked" id="mirrorNode" [style.top]="nodeLocked ? '36px':'0px'" [style.color]="mirrorNode.color" [style.border-radius]="mirrorNode.isRectangle ? '5px':'14px'" [style.background-color]="mirrorNode.fill">
 	 	 T
 	  </div>
-	  <button type="button" class="btn btn-secondary btn-tool mt-2" [disabled]="currentIndex <= 1" (click)="undo()"><i class="fa fa-level-up fa-rotate-270" aria-hidden="true"></i></button>
-	  <button type="button" class="btn btn-secondary btn-tool mb-2" [disabled]="currentIndex >= maxIndex" (click)="redo()"><i class="fa fa-level-up fa-rotate-90" aria-hidden="true"></i></button>
-	  <button type="button" class="btn btn-secondary btn-tool" (click)="showSlider=!showSlider; slider()"><i class="fa fa-play" aria-hidden="true"></i></button>
+	  <button type="button" class="btn btn-secondary btn-tool mt-2" (click)="changeHistory(-1)"><i class="fa fa-level-up fa-rotate-270" aria-hidden="true"></i></button>
+	  <button type="button" class="btn btn-secondary btn-tool mb-2" (click)="changeHistory(1)"><i class="fa fa-level-up fa-rotate-90" aria-hidden="true"></i></button>
+	  <button type="button" class="btn btn-secondary btn-tool" (click)="showSlider=!showSlider;"><i class="fa fa-play" aria-hidden="true"></i></button>
 	</div>
 </div>
-<div [hidden]="!showSlider" class="slider" id="slider">
-	<div class="">
-		<i *ngIf="currentIndex == maxIndex" class="fa fa-repeat" aria-hidden="true" style="display: inline-block; margin-left: 40px; margin-right: 10px;" (click)="playSlides = !playSlides; replaySlider()"></i>
-		<i *ngIf="currentIndex != maxIndex" [class]="playSlides ? 'fa fa-pause':'fa fa-play'" aria-hidden="true" style="display: inline-block; margin-left: 40px; margin-right: 10px;" (click)="playSlides = !playSlides; playSlider(1)"></i>
-		<small> 
-			{{ currentIndex }}/{{ maxIndex }}
-			<span class="ml-2">Speed: </span> 
-			<input type="range" min="300" max="2000" step="100" value="1300" #speed (change)="speedSlider=speed.value" style="width: 100px;">
-		</small>
-		<span class="ml-3">
-			<i class="fa fa-code-fork" aria-hidden="true" data-toggle="modal" data-target="#branchModal"></i>
-		</span>
-		<span class="float-right mr-2" (click)="playSlides = !playSlides; playSlider(-1)">
-			<i class="fa fa-backward" aria-hidden="true"></i>
-		</span>
-	</div>
-	<svg class="svg-slider" id="svg-slider" >
-		<g id="gslider"></g>
-	</svg>
-</div>
+<slider *ngIf="showSlider"></slider>

@@ -11,6 +11,9 @@ export class ExportData {
 	}
 
 	csv(data, name): void {
+		/*
+			
+		*/
 		let ar = "";
 		if(name == "relationships") {
 			let d = {};
@@ -71,6 +74,9 @@ export class ExportData {
 	}
 
 	cypher(data): void {
+		/*
+			
+		*/
 		let rel = data.relationships;
 		let nodes = data.nodes;
 		let lines = [];
@@ -119,6 +125,9 @@ export class ExportData {
 	}
 
 	markup(data): void {
+		/*
+
+		*/
 		let rel = data.relationships;
 		let nodes = data.nodes;
 		let style = `<style>
@@ -137,6 +146,15 @@ export class ExportData {
 		let markup = '<textarea>' + '<ul class="graph-diagram-markup">\n';
 
 		for(let key in nodes){
+			let props = '<dl class="properties">\n';
+			for(let line of nodes[key].properties.text.split("\n")){
+				let p = line.split(":");
+				if(p.length == 2){
+					props += '<dt>' + p[0] + '</dt>' + 
+						'<dd>' + p[1] + '</dd>\n';
+				}
+			}
+			props += '</dl>\n';
 			markup += '<li class="node" ' +
 				'data-node-id="' + key +
 				'" data-x="' + nodes[key].x +
@@ -145,14 +163,25 @@ export class ExportData {
 				'" style="background-color: ' + nodes[key].style.fill +
 				'; color: ' + nodes[key].style.color + 
 				'">' + (nodes[key].caption ? '\n	<span class="caption">' + nodes[key].caption + "</span>\n":"") +
+				props +
 				"</li>\n";
 		}
 		for(let g in rel){
 			for(let key in rel[g]){
+				let props = '<dl class="properties">\n';
+				for(let line of rel[g][key].properties.text.split("\n")){
+					let p = line.split(":");
+					if(p.length == 2){
+						props += '<dt>' + p[0] + '</dt>' + 
+							'<dd>' + p[1] + '</dd>\n';
+					}
+				}
+				props += '</dl>\n';
 				markup += '<li class="relationship" ' +
 					'data-from="' + rel[g][key].startNode +
 					'" data-to="' + rel[g][key].endNode +
 					'">' + (rel[g][key].type ? '\n	<span class="type">' + rel[g][key].type + "</span>\n":"") +
+					props +
 					"</li>\n";
 			}
 		}

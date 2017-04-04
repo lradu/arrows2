@@ -1,4 +1,4 @@
-import { Component, AfterContentInit, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, AfterViewInit, Inject, ChangeDetectorRef } from '@angular/core';
 import { FirebaseApp } from 'angularfire2'
 import { AddData } from '../diagram/diagram.service';
 
@@ -8,7 +8,7 @@ import { AddData } from '../diagram/diagram.service';
   styleUrls: ['./diagrams.component.css'],
   providers: [AddData]
 })
-export class DiagramsComponent implements AfterContentInit {
+export class DiagramsComponent implements AfterViewInit {
 	public dbref: any;
 	public user: any;
 
@@ -31,7 +31,7 @@ export class DiagramsComponent implements AfterContentInit {
   	this.diagrams = [];
   }
 
-  ngAfterContentInit() {
+  ngAfterViewInit() {
   	//get diagrams list
   	this.dbref
   		.child('users/' + this.user.uid + '/sortAccess')

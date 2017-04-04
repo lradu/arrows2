@@ -1,10 +1,11 @@
-import { Component, Inject, ChangeDetectorRef, AfterContentInit  } from '@angular/core';
+import { Component, Inject, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { AngularFire, FirebaseApp } from 'angularfire2';
 import * as d3 from 'd3'; 
 
 import { Model } from './graph/model';
 import { Node } from './graph/node';
 import { Relationship } from './graph/relationship';
+import { SliderComponent } from './slider/slider.component';
 
 @Component({
   selector: 'diagram',
@@ -12,7 +13,7 @@ import { Relationship } from './graph/relationship';
   styleUrls: ['./diagram.component.css']
 })
 
-export class DiagramComponent implements AfterContentInit  {
+export class DiagramComponent implements AfterViewInit  {
 	public svg: any;
 	public gNodes: any;
 	public gCaptions: any;
@@ -27,8 +28,6 @@ export class DiagramComponent implements AfterContentInit  {
 	public currentDiagram: string;
 	public currentNode: any;
 	public currentR: any;
-	public currentIndex: number;
-	public maxIndex: number;
 	public access: string;
 
 	public showTools: boolean;
@@ -39,8 +38,6 @@ export class DiagramComponent implements AfterContentInit  {
 	public relIndex: boolean = true;
 	public removeLocked: boolean = false;
 	public showSlider: boolean = false;
-	public playSlides: boolean = false;
-	public speedSlider: number = 1300;
 
 	constructor(
 		private af: AngularFire, 
@@ -57,7 +54,7 @@ export class DiagramComponent implements AfterContentInit  {
 			}
 	}
 
-	ngAfterContentInit(){
+	ngAfterViewInit(){
 		this.svg = d3.select("#diagram")
 			.append("svg")
 				.attr("class", "graph");
@@ -75,13 +72,14 @@ export class DiagramComponent implements AfterContentInit  {
 	}
 
 	loadData(){
-		let zoomFit = true;
+		let zoomFit = true;   // 
 		this.dbref
 			.child('users/' + this.user.uid + "/currentDiagram")
 			.on('value',
 				(snap) => {
 					this.currentDiagram = snap.val();
 					this.showTools = false;
+					this.showSlider = false;
 					this.dbref
 						.child('diagrams/' + this.currentDiagram + '/users/' + this.user.uid + '/access')
 						.on('value', (snapChild) => {
@@ -115,13 +113,20 @@ export class DiagramComponent implements AfterContentInit  {
 								}
 						}
 					}); 
-						this.dbref
-							.child('diagrams/' + this.currentDiagram + '/history')
-							.once('value', 
-								(snapShot) => {
-									this.currentIndex = snapShot.numChildren();
-									this.maxIndex = this.currentIndex;
-								})
+					this.dbref
+						.child('diagrams/' + this.currentDiagram + '/currentIndex')
+						.on('value', (snapShot) => {
+							snapShot.ref.parent
+								.child('history/' + snapShot.val())
+								.once('value',
+									(snap) => {
+										if(snap.val()){
+											snapShot.ref.parent.update({
+													'data': snap.val()
+												});
+										}
+									});
+						});
 			})
 	}
 
@@ -165,22 +170,11 @@ export class DiagramComponent implements AfterContentInit  {
 					+ (node.y + node.radius)
 					+ ")";
 				})
-				.attr("d", function(node){
+				.attr("d", (node) => {
 					if(node.properties.text){
 						node["lines"] = node.properties.text.split("\n");
 						let l = node.lines.length;
-						return "M 0 0" +
-						"L 20 -10" +
-						"L 20 " + -(l * 25) +
-						"A 10 10 0 0 1 30" + -(l * 25 + 10) +
-			 			"L " + (node.properties.width * 2)  + " " + -(l * 25 + 10) +
-						"A 10 10 0 0 1 " + (node.properties.width * 2 + 10) + " " + -(l * 25) +
-						"L " + (node.properties.width * 2 + 10) + " " + (l * 25) +
-						"A 10 10 0 0 1 " + (node.properties.width * 2) + " " + (l * 25 + 10) +
-						"L 30 " + (l * 25 + 10) +
-						"A 10 10 0 0 1 20 " + (l * 25) +
-						"L 20 10" +
-						"Z";
+						return this.speechBubblePath(node.properties.width * 2, l * 50, "horizontal", 10, 10);
 					}
 				})
 				.attr("fill", "white")
@@ -196,7 +190,7 @@ export class DiagramComponent implements AfterContentInit  {
 				for(let i = 0; i < node.lines.length; i++){;
 					list.push({
 						"text": node.lines[i],
-						"x": node.x + 2 * node.radius + node.properties.width + 10,
+						"x": node.x + 2 * node.radius + node.properties.width + 20,
 						"y": node.y + node.radius + (i - node.lines.length) * 25 + (i + 1) * 25,
 						"color": node.style.color
 					});
@@ -239,7 +233,7 @@ export class DiagramComponent implements AfterContentInit  {
 			.append("g")
 				.attr("class", "groups")
 		 	  .selectAll("g.relationships")
-				.data(function(d) { return d; })
+				.data(function(g) { return g; });
 		 		
 		rel.enter()
 			.append("path")
@@ -264,10 +258,10 @@ export class DiagramComponent implements AfterContentInit  {
 				})
 				.attr("fill", function(rl) { return rl.style.fill; })
 				
+
 		rel.enter()
-			.append("text")
-				.attr("x", function(rl) { return rl.position.apex.x; })
-				.attr("y", function(rl) { return rl.position.apex.y; })
+			.append("g")
+				.attr("class", "group")
 				.attr("transform", function(rl) {
 					return "translate("
 					+ (rl.source.x + rl.source.radius)
@@ -275,41 +269,40 @@ export class DiagramComponent implements AfterContentInit  {
 					+ (rl.source.y + rl.source.radius)
 					+ ")" + "rotate(" + rl.angle + ")";
 				})
-				.attr("fill", "#ffffff")
-				.attr("stroke", "black")
-				.attr("stroke-width", 2)
-				.attr("class", "node caption")
+			.append("text")
+				.attr("x", function(rl) { return rl.position.apex.x; })
+				.attr("y", function(rl) { return rl.position.apex.y - 40; })
+				.attr("fill", "#333333")
+				.attr("class", "relationship type")
 				.attr("text-anchor", "middle")
 				.attr("font-size",  "50px")
 				.attr("alignment-baseline", "central")
 				.text(function(rl) { return rl.type; });
 
 		rel.enter()
-			.append("path")
-				.attr("class", "node properties")
+			.append("g")
+				.attr("class", "group")
 				.attr("transform", function(rl) {
 					return "translate("
-					+ (rl.source.x + rl.source.radius + rl.position.apex.x)
+					+ (rl.source.x + rl.source.radius)
 					+ ","
-					+ (rl.source.y + rl.source.radius + rl.position.apex.y)
+					+ (rl.source.y + rl.source.radius)
+					+ ")" + "rotate(" + rl.angle + ")";
+				})
+			.append("path")
+				.attr("class", "relationship bubble")
+				.attr("transform", function(rl) {
+					return "translate("
+					+ rl.position.apex.x
+					+ ","
+					+ rl.position.apex.y
 					+ ")";
 				})
-				.attr("d", function(rl){
+				.attr("d", (rl) => {
 					if(rl.properties.text){
 						rl["lines"] = rl.properties.text.split("\n");
 						let l = rl.lines.length;
-						return "M 0 0" +
-						"L 20 -10" +
-						"L 20 " + -(l * 25) +
-						"A 10 10 0 0 1 30" + -(l * 25 + 10) +
-			 			"L " + (rl.properties.width * 2)  + " " + -(l * 25 + 10) +
-						"A 10 10 0 0 1 " + (rl.properties.width * 2 + 10) + " " + -(l * 25) +
-						"L " + (rl.properties.width * 2 + 10) + " " + (l * 25) +
-						"A 10 10 0 0 1 " + (rl.properties.width * 2) + " " + (l * 25 + 10) +
-						"L 30 " + (l * 25 + 10) +
-						"A 10 10 0 0 1 20 " + (l * 25) +
-						"L 20 10" +
-						"Z";
+						return this.speechBubblePath(rl.properties.width * 2, l * 50, "vertical", 10, 10);
 					}
 				})
 				.attr("fill", "white")
@@ -318,7 +311,18 @@ export class DiagramComponent implements AfterContentInit  {
 
 		let gProperties = rel.enter()
 			.append("g")
-			.attr("class", "properties");
+			.attr("class", "relationship properties")
+			.attr("transform", function(rl) {
+				if(rl.lines) {
+					return "translate("
+					+ (rl.source.x + rl.source.radius)
+					+ ","
+					+ (rl.source.y + rl.source.radius)
+					+ ")" + "rotate(" + rl.angle + ")";
+				} else { 
+					return "";
+				}
+			})
 		gProperties.selectAll("text")
 			.enter()	
 			.data(function(rl) { if(rl.lines){
@@ -327,10 +331,8 @@ export class DiagramComponent implements AfterContentInit  {
 					list.push({
 						"text": rl.lines[i],
 						"x": rl.position.apex.x,
-						"y": rl.position.apex.y + (i - rl.lines.length) * 25 + (i + 1) * 25,
+						"y": rl.position.apex.y + (i * 50) + 40,
 						"color": rl.style.fill,
-						"tx": rl.source.x + rl.source.radius,
-						"ty": rl.source.y + rl.source.radius,
 						"angle": rl.angle
 					});
 				}
@@ -341,10 +343,7 @@ export class DiagramComponent implements AfterContentInit  {
 			.enter()
 			.append("text")
 				.attr("x", function(p) { return p.x; })
-				.attr("y", function(p) { return p.y - 100; })
-				.attr("transform", function(p) {
-					return "translate(" + p.tx + "," + p.ty + ")" + "rotate(" + p.angle + ")";
-				})
+				.attr("y", function(p) { return p.y; })
 				.attr("fill", function(p) { return p.color; })
 				.attr("class", "properties")
 				.attr("text-anchor", "middle")
@@ -589,26 +588,26 @@ export class DiagramComponent implements AfterContentInit  {
 		Arrows
 	*/
 	horizontalArrow(start, end, arrowWidth) {
-	    let shaftRadius = arrowWidth / 2;
-	    let headRadius = arrowWidth * 2;
-	    let headLength = headRadius * 2;
-	    let shoulder = start < end ? end - headLength : end + headLength;
-	    return {
-	        outline: [
-	            "M", start, shaftRadius,
-	            "L", shoulder, shaftRadius,
-	            "L", shoulder, headRadius,
-	            "L", end, 0,
-	            "L", shoulder, -headRadius,
-	            "L", shoulder, -shaftRadius,
-	            "L", start, -shaftRadius,
-	            "Z"
-	        ].join(" "),
-	        apex: {
-	            "x": start + (shoulder - start) / 2,
-	            "y": 0
-	        }
-	    };
+		let shaftRadius = arrowWidth / 2;
+		let headRadius = arrowWidth * 2;
+		let headLength = headRadius * 2;
+		let shoulder = start < end ? end - headLength : end + headLength;
+		return {
+		    outline: [
+		        "M", start, shaftRadius,
+		        "L", shoulder, shaftRadius,
+		        "L", shoulder, headRadius,
+		        "L", end, 0,
+		        "L", shoulder, -headRadius,
+		        "L", shoulder, -shaftRadius,
+		        "L", start, -shaftRadius,
+		        "Z"
+		    ].join(" "),
+		    apex: {
+		        "x": start + (shoulder - start) / 2,
+		        "y": 0
+		    }
+		};
 	} 
 	curvedArrow(startRadius, endRadius, endCentre, minOffset, arrowWidth, headWidth, headLength){
 	  let startAttach, endAttach, offsetAngle;
@@ -705,7 +704,77 @@ export class DiagramComponent implements AfterContentInit  {
 	          "y": cy > 0 ? cy - arcRadius : cy + arcRadius
 	      }
 	  };
-	} 
+	}
+	speechBubblePath(width, height, style, margin, padding) {
+		let styles = {
+		    diagonal: [
+		        "M", 0, 0,
+		        "L", margin + padding, margin,
+		        "L", margin + width + padding, margin,
+		        "A", padding, padding, 0, 0, 1, margin + width + padding * 2, margin + padding,
+		        "L", margin + width + padding * 2, margin + height + padding,
+		        "A", padding, padding, 0, 0, 1, margin + width + padding, margin + height + padding * 2,
+		        "L", margin + padding, margin + height + padding * 2,
+		        "A", padding, padding, 0, 0, 1, margin, margin + height + padding,
+		        "L", margin, margin + padding,
+		        "Z"
+		    ],
+		    horizontal: [
+		        "M", 0, 0,
+		        "L", margin, -padding,
+		        "L", margin, -height / 2,
+		        "A", padding, padding, 0, 0, 1, margin + padding, -height / 2 - padding,
+		        "L", margin + width + padding, -height / 2 - padding,
+		        "A", padding, padding, 0, 0, 1, margin + width + padding * 2, -height / 2,
+		        "L", margin + width + padding * 2, height / 2,
+		        "A", padding, padding, 0, 0, 1, margin + width + padding, height / 2 + padding,
+		        "L", margin + padding, height / 2 + padding,
+		        "A", padding, padding, 0, 0, 1, margin, height / 2,
+		        "L", margin, padding,
+		        "Z"
+		    ],
+		    vertical: [
+		        "M", 0, 0,
+		        "L", -padding, margin,
+		        "L", -width / 2, margin,
+		        "A", padding, padding, 0, 0, 0, -width / 2 - padding, margin + padding,
+		        "L", -width / 2 - padding, margin + height + padding,
+		        "A", padding, padding, 0, 0, 0, -width / 2, margin + height + padding * 2,
+		        "L", width / 2, margin + height + padding * 2,
+		        "A", padding, padding, 0, 0, 0, width / 2 + padding, margin + height + padding,
+		        "L", width / 2 + padding, margin + padding,
+		        "A", padding, padding, 0, 0, 0, width / 2, margin,
+		        "L", padding, margin,
+		        "Z"
+		    ]
+		};
+		return styles[style].join(" ");
+	};
+	// chooseRelationshipSpeechBubbleOrientation(relationshipAngle) {
+ //  	let orientations = {
+ //  	    EAST:       { style: "horizontal", mirrorX:  1, mirrorY:  1, angle:    0 },
+ //  	    SOUTH_EAST: { style: "diagonal",   mirrorX:  1, mirrorY:  1, angle:   45 },
+ //  	    SOUTH     : { style: "vertical",   mirrorX:  1, mirrorY:  1, angle:   90 },
+ //  	    SOUTH_WEST: { style: "diagonal",   mirrorX: -1, mirrorY:  1, angle:  135 },
+ //  	    WEST:       { style: "horizontal", mirrorX: -1, mirrorY:  1, angle:  180 }
+ //  	};
+
+ //  	let positiveAngle = relationshipAngle > 0 ? relationshipAngle : relationshipAngle + 180;
+
+ //  	if ( positiveAngle > 175 || positiveAngle < 5 ) {
+ //  	  return orientations.SOUTH;
+ //  	} else if ( positiveAngle < 85 ) {
+ //  	  return orientations.SOUTH_WEST
+ //  	} else if ( positiveAngle < 90 ) {
+ //  	  return orientations.WEST;
+ //  	} else if ( positiveAngle === 90 ) {
+ //  	  return relationshipAngle > 0 ? orientations.WEST : orientations.EAST;
+ //  	} else if ( positiveAngle < 95 ) {
+ //  	  return orientations.EAST;
+ //  	} else{ 
+ //  	  return orientations.SOUTH_EAST;
+ //  	}
+ //  };
 
 	/*
 
@@ -757,32 +826,19 @@ export class DiagramComponent implements AfterContentInit  {
 	}
 
 	deleteNode() {
-		let ref = this.dbref
-			.child('diagrams/' + this.currentDiagram + '/data');
-		ref
-			.child('relationships/')
-			.orderByChild('startNode')
-			.equalTo(this.currentNode.id)
-			.once('value', (snap) => {
-				snap.forEach((snapChild) => {
-					snapChild.ref.remove();
-				});
-			});
-		ref
-			.child('relationships/')
-			.orderByChild('endNode')
-			.equalTo(this.currentNode.id)
-			.once('value', (snap) => {
-				snap.forEach((snapChild) => {
-					snapChild.ref.remove();
-				});
-			}).then(
-		(success) =>{
+		let updateObj = {};
+		this.model.relationships.filter((rl) => {
+			if(rl[0].startNode == this.currentNode.id || rl[0].endNode == this.currentNode.id){
+				updateObj['relationships/' + rl[0].group] = null;
+			}
+		})
+		updateObj['nodes/' + this.currentNode.id] = null;
+		this.dbref
+			.child('diagrams/' + this.currentDiagram + '/data')
+			.update(updateObj)
+			.then((success) =>{
 			this.updateHistory();
 		});
-		ref
-			.child('nodes/' + this.currentNode.id)
-			.remove();
 		this.showTools = false;
 		this.ref.detectChanges();
 	}
@@ -891,250 +947,70 @@ export class DiagramComponent implements AfterContentInit  {
 		this.ref.detectChanges();
 	}
 	updateHistory(){
-		this.currentIndex += 1;
 		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/data')
-			.once('value', 
-				(snap) => { 
-					snap.ref.parent
-						.child('history')
-						.update({
-							[this.currentIndex]: snap.val()
-						});
-				}).then(
-				(success) => {
-					this.maxIndex = this.currentIndex;
-					this.dbref
-						.child('diagrams/' + this.currentDiagram + '/history')
-						.once('value', 
-							(snapShot) => {
-								for(let i = snapShot.numChildren(); i > this.maxIndex; i--){
-									snapShot.ref.child('' + i).remove();
-								}
-							});
-				});
-	}
-	undo(){
-		this.currentIndex -= 1;
-		this.revertHistory();
-		this.translateCircle(this.currentIndex);
-		this.colorSlide(this.currentIndex);
-	}
-	redo(){
-		this.currentIndex += 1;
-		this.revertHistory();
-		this.translateCircle(this.currentIndex);
-		this.colorSlide(this.currentIndex);
-	}
-	revertHistory(){
-		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/history/' + this.currentIndex)
+			.child('diagrams/' + this.currentDiagram + '/currentIndex')
 			.once('value',
 				(snap) => {
-					if(snap.val()){
-					this.dbref
-						.child('diagrams/' + this.currentDiagram)
-						.update({
-							'data':snap.val()
+					snap.ref.parent
+						.child('data')
+						.once('value', (snapShot) => {
+							snap.ref.parent.child('history')
+								.update({
+									['' + (snap.val() + 1)]: snapShot.val()
+								})
+							snap.ref.parent
+								.update({
+									'currentIndex': snap.val() + 1
+								}).then((success) => {
+									this.dbref
+										.child('diagrams/' + this.currentDiagram + '/history')
+										.orderByKey()
+										.startAt('' + (snap.val() + 2))
+										.once('value', (snapChild => {
+											snapChild.forEach((child) => {
+												child.ref.remove();
+											})
+										}));
+								});
 						});
-					}
-				});
+			});
+		// this.dbref
+		// 	.child('diagrams/' + this.currentDiagram + '/data')
+		// 	.once('value', 
+		// 		(snap) => { 
+		// 			snap.ref.parent
+		// 				.child('history')
+		// 				.update({
+		// 					[this.currentIndex]: snap.val()
+		// 				});
+		// 		}).then(
+		// 		(success) => {
+		// 			this.maxIndex = this.currentIndex;
+		// 			this.dbref
+		// 				.child('diagrams/' + this.currentDiagram + '/history')
+		// 				.once('value', 
+		// 					(snapShot) => {
+		// 						for(let i = snapShot.numChildren(); i > this.maxIndex; i--){
+		// 							snapShot.ref.child('' + i).remove();
+		// 						}
+		// 					});
+		// 		});
 	}
-	/*
-
-		Slider
-		
-	*/
-	slider(){
+	changeHistory(index){
 		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/history')
-			.once('value', (snap) => {
-				if(!snap.val()){
-					return;
-				} 
-				let data = new Array((snap.numChildren() - 1) * 2);
-				let fullWidth = this.svg.node().clientWidth || this.svg.node().parentNode.clientWidth;
-				let width = (fullWidth - 40) / data.length;
-				let x = -width;
-				let g = d3.select("#gslider");
-				g.selectAll("rect")
-					.remove();
-				g.selectAll("rect")
-					.data(data)
-					.enter()
-					.append("rect")
-					.attr("x", function(){
-						x += width;
-						return x;
-					})
-					.attr("y", 5)
-					.attr("width", width)
-					.attr("height", 8)
-					.attr("fill", (data, i) => {
-						if(i >= (this.currentIndex - 1) * 2){
-							return "lightgray";
-						}
-						return "#cc0000";
-					})
-					.style("cursor", "pointer")
-					.on('click', (data, i) => {
-						if(!i){
-							this.currentIndex = 1;
-						} else if(i == (this.maxIndex - 1) * 2 - 1){
-							this.currentIndex = this.maxIndex;
-						} else {
-							this.currentIndex = Math.floor(i / 2) + 1;
-							if(i % 2){
-								this.currentIndex += 1;
+			.child('diagrams/' + this.currentDiagram + '/currentIndex')
+			.once('value',
+				(snap) => {
+					snap.ref.parent
+						.child('history/' + (snap.val() + index))
+						.once('value', (snapshot) => {
+							if(snapshot.val()){
+								snap.ref.parent.update({
+									'currentIndex': snap.val() + index
+								});
 							}
-						}
-						this.colorSlide(this.currentIndex);
-						this.translateCircle(this.currentIndex);
-						this.revertHistory();
-					});
-			
-				g.selectAll("circle")
-					.remove();	
-				let circle = g.append("circle")
-					.attr("id", "slidehead")
-					.attr("cx", 0) 
-					.attr("cy", 9)
-					.attr("r", 8)
-					.attr("fill", "#990000")
-					.call(d3.drag()
-						.on("drag", drag));
-				this.translateCircle(this.currentIndex);
-
-				let that = this;
-				function drag(){
-					let x = (that.currentIndex - 1) * (width * 2);
-					if(d3.event.x > 0 && d3.event.x <= width * data.length){
-						if(d3.event.x < x - width){
-							circle.attr("transform", "translate(" + (x - (width * 2)) + ",0)");
-							that.currentIndex -= 1;
-							that.revertHistory();
-							that.colorSlide(that.currentIndex);
-						} else if(d3.event.x > x + width){
-							circle.attr("transform", "translate(" + (x + (width * 2)) + ",0)");
-							that.currentIndex += 1;
-							that.revertHistory();
-							that.colorSlide(that.currentIndex);
-						}
-					}
-				}
-			})
-	}
-
-	playSlider(i){
-		let interval = setInterval(() => {
-			this.currentIndex += i;
-			if(this.currentIndex > this.maxIndex || !this.playSlides){
-				this.currentIndex = this.maxIndex;
-				clearInterval(interval);
-				this.playSlides = false;
-				return;
-			} else if(this.currentIndex < 1){
-				this.currentIndex = 1;
-				clearInterval(interval);
-				this.playSlides = false;
-				return;
-			}
-			this.revertHistory();
-			this.translateCircle(this.currentIndex);
-			this.colorSlide(this.currentIndex);
-			}, 2300 - this.speedSlider);
-	}
-
-	replaySlider(){
-		this.currentIndex = 1;
-		this.revertHistory();
-		this.translateCircle(this.currentIndex);
-		this.colorSlide(this.currentIndex);
-		this.playSlider(1);
-	}
-
-	translateCircle(i){
-		i -= 1;
-		let fullWidth = this.svg.node().clientWidth || this.svg.node().parentNode.clientWidth;
-		let width = (fullWidth - 40) / (this.maxIndex - 1);
-		d3.select("#slidehead").attr("transform", "translate(" + (i * width) + ",0)");
-	}
-	colorSlide(i){
-		let g = d3.select("#gslider");
-		let nodes = g.selectAll("rect").nodes();
-		for(let j = 0; j < nodes.length; j++ ){
-			d3.select(nodes[j])
-				.attr("fill", function(){
-					if(j >= (i - 1) * 2) return "lightgray";
-					return "#cc0000";
+						});
 				});
-		}
-	}
-
-	/*
-		
-		Branch
-
-	*/
-	createBranch(title, choice){
-		this.dbref
-			.child('diagrams/' + this.currentDiagram + '/history')
-			.once('value', (snap) => {
-				if(!snap.val()){
-					return;
-				}
-				let data, history = {};
-				snap.forEach((child) => {
-					if(child.key == this.currentIndex){
-						history[child.key] = child.val();
-						data = child.val();
-						snap.ref.parent
-							.child('users/' + this.user.uid + '/access')
-							.once('value', (snapChild) => {
-								this.newDiagram(data, history, snapChild.val(), title, choice);
-							});
-						return;
-					}
-					history[child.key] = child.val();
-				});
-			});
-	}
-
-	newDiagram(data, history, access, title, choice){
-		let date = new Date().toLocaleDateString();
-		this.dbref.child('diagrams/').push({
-			"data": data,
-			"history": history,
-			"info" : {
-        "created" : date,
-        "lastUpdate" : date,
-        "title" : title
-      },
-      "users" : {
-        [this.user.uid] : {
-          "access" : access,
-          "dateAdded" : date,
-          "email" : this.user.email,
-          "lastUpdate" : date
-        }
-      }
-		}).then(
-			(newD) => {
-				this.showSlider = false;
-				this.dbref
-					.child('users/' + this.user.uid + '/diagrams')
-					.update({
-						[newD.key]: true
-				});
-				if(choice){
-					return;
-				}
-				this.dbref
-					.child('users/' + this.user.uid)
-					.update({
-						"currentDiagram": newD.key
-					})
-			});
 	}
 
 	/*

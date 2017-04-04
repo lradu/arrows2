@@ -7,7 +7,7 @@ import { AuthGuard } from '../auth/auth-guard.service';
 import { dashRouting } from './dashboard.routing';
 import { DashboardComponent } from './dashboard.component';
 import { ProfileComponent } from './profile/profile.component';
-import { DiagramComponent } from './diagram/diagram.component';
+import { DiagramModule } from './diagram/diagram.module';
 import { DiagramsComponent } from './diagrams/diagrams.component';
 import { AccessComponent } from './access/access.component';
 
@@ -15,13 +15,13 @@ import { AccessComponent } from './access/access.component';
   imports:      [ 
     dashRouting,
     FormsModule,
-    CommonModule
+    CommonModule,
+    DiagramModule
    ],
   providers: [AuthGuard],
   declarations: [ 
     DashboardComponent,
     ProfileComponent,
-    DiagramComponent,
     DiagramsComponent,
     AccessComponent,
   ]

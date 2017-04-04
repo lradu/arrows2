@@ -1,4 +1,4 @@
-import { Component, AfterContentInit, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, AfterViewInit, Inject, ChangeDetectorRef } from '@angular/core';
 import { FirebaseApp } from 'angularfire2'
 
 @Component({
@@ -6,7 +6,7 @@ import { FirebaseApp } from 'angularfire2'
   templateUrl: './access.component.html',
   styleUrls: ['./access.component.css']
 })
-export class AccessComponent implements AfterContentInit {
+export class AccessComponent implements AfterViewInit {
 	public dbref: any;
 	public user: any;
 
@@ -22,7 +22,7 @@ export class AccessComponent implements AfterContentInit {
   	this.date = new Date().toLocaleDateString();
   }
 
-  ngAfterContentInit() {
+  ngAfterViewInit() {
   	this.dbref
   		.child('users/' + this.user.uid + '/currentDiagram')
   		.on('value', (snap) => {
