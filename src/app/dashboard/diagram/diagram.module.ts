@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 
 import { DiagramComponent } from './diagram.component';
 import { SliderComponent } from './slider/slider.component';
+import { ColorsComponent } from './colors/colors.component';
 
 @NgModule({
   imports: [
@@ -14,6 +15,7 @@ import { SliderComponent } from './slider/slider.component';
   declarations: [
   	DiagramComponent,
     SliderComponent,
+    ColorsComponent,
   ]
 })
 export class DiagramModule { }

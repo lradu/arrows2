@@ -26,18 +26,20 @@
 	  </div>
 	  <div class="form-group">
 	    <div class="input-group">
-	      <span class="input-group-btn">
-        	<button class="btn btn-secondary" type="button" [style.color]="currentNode.style.color">Text Color</button>
-      	</span>
 	      <input type="text" class="form-control" id="text-color" [(ngModel)]="currentNode.style.color" name="textColor">
+        <button class="btn btn-secondary dropdown-toggle" type="button" [style.color]="currentNode.style.color" id="text-color-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Text Color</button>
+      	<div class="dropdown-menu dropdown-menu-right color-picker" aria-labelledby="text-color-button">
+      	  <colors (changeColor)="changeColor($event, 'text')"></colors>
+      	</div>
 	    </div>
 	  </div>
 	  <div class="form-group">
 	    <div class="input-group">
-	      <span class="input-group-btn">
-        	<button class="btn btn-secondary" type="button" [style.background-color]="currentNode.style.fill">Background</button>
-      	</span>
 	      <input type="text" class="form-control" id="bg-color" [(ngModel)]="currentNode.style.fill" name="bgColor">
+        <button class="btn btn-secondary dropdown-toggle" type="button" [style.background-color]="currentNode.style.fill" id="bg-color-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Background</button>
+        <div class="dropdown-menu dropdown-menu-right color-picker" aria-labelledby="bg-color-button">
+        	<colors (changeColor)="changeColor($event, 'bg')"></colors>
+        </div>
 	    </div>
 	  </div>
 	  <div class="form-group">
@@ -60,10 +62,13 @@
 	  </div>
 	 	<div class="form-group">
 	    <div class="input-group">
-	      <span class="input-group-btn">
-        	<button class="btn btn-secondary" type="button" [style.color]="currentR.style.fill"><i class="fa fa-long-arrow-right" aria-hidden="true"></i></button>
-      	</span>
 	      <input type="text" class="form-control" id="bg-color" [(ngModel)]="currentR.style.fill" name="fillColor">
+        <button class="btn btn-secondary dropdown-toggle" type="button" [style.color]="currentR.style.fill" id="rl-color-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        	<i class="fa fa-long-arrow-right" aria-hidden="true"></i>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right color-picker" aria-labelledby="rl-color-button">
+        	<colors (changeColor)="changeColor($event)"></colors>
+	    	</div>
 	    </div>
 	  </div>
 	  <div class="form-group">

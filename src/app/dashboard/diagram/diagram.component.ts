@@ -5,7 +5,6 @@ import * as d3 from 'd3';
 import { Model } from './graph/model';
 import { Node } from './graph/node';
 import { Relationship } from './graph/relationship';
-import { SliderComponent } from './slider/slider.component';
 
 @Component({
   selector: 'diagram',
@@ -1011,6 +1010,17 @@ export class DiagramComponent implements AfterViewInit  {
 							}
 						});
 				});
+	}
+	changeColor(color, target){
+		if(this.showNodeTools){
+			if(target == 'bg'){
+				this.currentNode.style.fill = color;
+			} else {
+				this.currentNode.style.color = color;
+			}
+		} else {
+			this.currentR.style.fill = color;
+		}
 	}
 
 	/*
