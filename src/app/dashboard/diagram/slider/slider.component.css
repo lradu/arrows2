@@ -2,7 +2,6 @@
   position: fixed;
   bottom: 0;
   width: 100%;
-  height: 70px;
   background-color: #f7f7f7;
   padding-top: 8px;
   color: #777D80;
@@ -20,6 +19,7 @@ input[type=range] {
   -webkit-appearance: none;
   margin: 10px 0;
   width: 100%;
+  background-color: #f7f7f7;
 }
 input[type=range]:focus {
   outline: none;
@@ -96,10 +96,4 @@ input[type=range]::-ms-thumb {
   border-radius: 8px;
   background: #990000;
   cursor: pointer;
-}
-input[type=range]:focus::-ms-fill-lower {
-  background: #990000;
-}
-input[type=range]:focus::-ms-fill-upper {
-  background: #CAD4D9;
 }

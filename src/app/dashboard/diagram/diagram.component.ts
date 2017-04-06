@@ -37,6 +37,8 @@ export class DiagramComponent implements AfterViewInit  {
 	public relIndex: boolean = true;
 	public removeLocked: boolean = false;
 	public showSlider: boolean = false;
+	
+	public propColor: number;
 
 	constructor(
 		private af: AngularFire, 
@@ -1011,12 +1013,12 @@ export class DiagramComponent implements AfterViewInit  {
 						});
 				});
 	}
-	changeColor(color, target){
+	changeColor(color){
 		if(this.showNodeTools){
-			if(target == 'bg'){
-				this.currentNode.style.fill = color;
-			} else {
+			if(this.propColor == 1){
 				this.currentNode.style.color = color;
+			} else {
+				this.currentNode.style.fill = color;
 			}
 		} else {
 			this.currentR.style.fill = color;

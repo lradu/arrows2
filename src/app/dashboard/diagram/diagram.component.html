@@ -1,11 +1,13 @@
-<div id="diagram">
-</div>
+<!-- Graph diagram -->
+<div id="diagram"></div>
+
+<!-- Right bar tools -->
 <div id="tools" class="col-lg-3 col-md-4 col-xs-12 offset-lg-9 offset-md-8" *ngIf="showTools">
 	<div class="form-group row" >
 		<a (click)="closeTools()" style="font-size: 1.4em; cursor: pointer;"><i class="fa fa-times-circle-o" aria-hidden="true"></i></a>
 	</div>
 	<!-- Edit Node -->
-	<form name="form" (ngSubmit)="saveNode()" *ngIf="showNodeTools">
+	<form name="form" (ngSubmit)="saveNode()" *ngIf="showNodeTools" style="background-color: white;">
 	  <div class="form-group">
 	    <label for="caption">Caption</label>
 	    <input type="text" class="form-control" id="caption" [(ngModel)]="currentNode.caption" name="caption">
@@ -27,26 +29,20 @@
 	  <div class="form-group">
 	    <div class="input-group">
 	      <input type="text" class="form-control" id="text-color" [(ngModel)]="currentNode.style.color" name="textColor">
-        <button class="btn btn-secondary dropdown-toggle" type="button" [style.color]="currentNode.style.color" id="text-color-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Text Color</button>
-      	<div class="dropdown-menu dropdown-menu-right color-picker" aria-labelledby="text-color-button">
-      	  <colors (changeColor)="changeColor($event, 'text')"></colors>
-      	</div>
+        <button class="btn btn-secondary" type="button" [style.color]="currentNode.style.color" id="text-color-button" data-toggle="modal" data-target="#colorpicker"  (click)="propColor=1">Text Color</button>
 	    </div>
 	  </div>
 	  <div class="form-group">
 	    <div class="input-group">
 	      <input type="text" class="form-control" id="bg-color" [(ngModel)]="currentNode.style.fill" name="bgColor">
-        <button class="btn btn-secondary dropdown-toggle" type="button" [style.background-color]="currentNode.style.fill" id="bg-color-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Background</button>
-        <div class="dropdown-menu dropdown-menu-right color-picker" aria-labelledby="bg-color-button">
-        	<colors (changeColor)="changeColor($event, 'bg')"></colors>
-        </div>
+        <button class="btn btn-secondary" type="button" [style.background-color]="currentNode.style.fill" id="bg-color-button" data-toggle="modal" data-target="#colorpicker" (click)="propColor=2">Background</button>
 	    </div>
 	  </div>
 	  <div class="form-group">
 	  	<button type="button" class="btn btn-danger" (click)="deleteNode()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
 	  	<button type="submit" class="btn btn-primary float-right">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
 	  </div>
-	</form>
+	</form> <!-- End Edit Node -->
 	<!-- Edit Relationship -->
 	<form name="rForm" (ngSubmit)="saveR()" *ngIf="!showNodeTools">
 		<div class="form-group">
@@ -63,21 +59,19 @@
 	 	<div class="form-group">
 	    <div class="input-group">
 	      <input type="text" class="form-control" id="bg-color" [(ngModel)]="currentR.style.fill" name="fillColor">
-        <button class="btn btn-secondary dropdown-toggle" type="button" [style.color]="currentR.style.fill" id="rl-color-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button class="btn btn-secondary" type="button" [style.color]="currentR.style.fill" id="rl-color-button" data-toggle="modal" data-target="#colorpicker">
         	<i class="fa fa-long-arrow-right" aria-hidden="true"></i>
         </button>
-        <div class="dropdown-menu dropdown-menu-right color-picker" aria-labelledby="rl-color-button">
-        	<colors (changeColor)="changeColor($event)"></colors>
-	    	</div>
 	    </div>
 	  </div>
 	  <div class="form-group">
 	  	<button type="button" class="btn btn-danger" (click)="deleteR()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
 	  	<button type="submit" class="btn btn-primary float-right">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
 	  </div>
-	</form>
-</div>
+	</form> <!-- End Edit Relationship -->
+</div> <!-- End Right bar tools -->
 
+<!-- Left bar tools -->
 <div id="diagram-tools" class="btn-group-vertical">
 	<button type="button" class="btn btn-secondary btn-tool" (click)="zoomChange(1)"><i class="fa fa-plus" aria-hidden="true"></i></button>
 	<button type="button" class="btn btn-secondary btn-tool" (click)="zoomChange(0)"><i class="fa fa-minus" aria-hidden="true"></i></button>
@@ -103,5 +97,16 @@
 	  <button type="button" class="btn btn-secondary btn-tool mb-2" (click)="changeHistory(1)"><i class="fa fa-level-up fa-rotate-90" aria-hidden="true"></i></button>
 	  <button type="button" class="btn btn-secondary btn-tool" (click)="showSlider=!showSlider;"><i class="fa fa-play" aria-hidden="true"></i></button>
 	</div>
+</div> <!-- End Left bar tools -->
+
+<!-- Slider -->
+<slider *ngIf="showSlider"></slider> 
+
+<!-- Colors modal -->
+<div class="modal fade bd-example-modal-lg" id="colorpicker" tabindex="-1" role="dialog" aria-labelledby="branchModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="padding: 15px;" data-dismiss="modal">
+    	<colors (changeColor)="changeColor($event)"></colors>
+    </div>
+  </div>
 </div>
-<slider *ngIf="showSlider"></slider>

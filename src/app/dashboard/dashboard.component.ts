@@ -24,14 +24,16 @@ export class DashboardComponent implements AfterViewInit {
 
 	public title: string;
 	public currentDiagram: string;
-	public date: string;
 
 	public importFileName: string = "Choose file...";
 	public importError: string;
-	public showImport: boolean = false;
 	public importReady: string;
 	public importData: any;
 	public importSuccess: string;
+
+	public showDiagrams: boolean = false;
+	public showAccess:boolean = false;
+
 
 	constructor(
 		private af: AngularFire,
@@ -43,10 +45,10 @@ export class DashboardComponent implements AfterViewInit {
 		) {
 		this.dbref = firebase.database().ref();
 		this.user = firebase.auth().currentUser;
-		this.date = new Date().toLocaleDateString();
 	}
 	
 	ngAfterViewInit(){
+		let date = new Date().toLocaleDateString();
 		this.dbref
 			.child('users/' + this.user.uid + '/currentDiagram')
 			.on('value',
@@ -58,8 +60,9 @@ export class DashboardComponent implements AfterViewInit {
 					this.dbref
 						.child('diagrams/' + this.currentDiagram + '/info')
 						.update({
-							"lastUpdate": this.date
+							"lastUpdate": date
 						});
+						
 					//title
 					this.dbref
 						.child('diagrams/' + snap.val() + '/info/title')
@@ -145,8 +148,9 @@ export class DashboardComponent implements AfterViewInit {
 		}
 	}
 	importNodes(){
+		let date = new Date().toLocaleDateString();
 		this.importReady = "Importing...";
-		this.addData.newDiagram(this.importData, this.date);
+		this.addData.newDiagram(this.importData, date);
 		this.importReady = "";
 		this.importFileName = "Choose file...";
 		this.importSuccess = "Success.";

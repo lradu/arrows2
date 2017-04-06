@@ -22,23 +22,35 @@
   </div>
 </div>
 <div class="slider" id="slider">
-	<div class="">
-		<i *ngIf="currentIndex == maxIndex" class="fa fa-repeat" aria-hidden="true" style="display: inline-block; margin-left: 40px; margin-right: 10px;" (click)="playSlides = !playSlides; replaySlider()"></i>
-		<i *ngIf="currentIndex != maxIndex" [class]="playSlides ? 'fa fa-pause':'fa fa-play'" aria-hidden="true" style="display: inline-block; margin-left: 40px; margin-right: 10px;" (click)="playSlides = !playSlides; playSlider(1)"></i>
-		<small> 
-			{{ currentIndex }}/{{ maxIndex }}
-			<span class="ml-2">Speed: </span> 
-			<input type="range" min="300" max="2000" step="100" value="1300" #speed (change)="speedSlider=speed.value" style="width: 100px;">
-		</small>
-		<span class="ml-3">
-			<i class="fa fa-code-fork" aria-hidden="true" data-toggle="modal" data-target="#branchModal"></i>
-		</span>
-		<span class="float-right mr-2" (click)="playSlides = !playSlides; playSlider(-1)">
-			<i class="fa fa-backward" aria-hidden="true"></i>
-		</span>
-	</div>
-	<input type="range" min="1" [max]="maxIndex" step="1" [value]="currentIndex" #inputslider (change)="changeSlide(inputslider.value)" class="svg-slider">
-	<!-- <svg class="svg-slider" id="svg-slider" >
-		<g id="gslider"></g>
-	</svg> -->
+  <ul class="nav">
+    <li class="nav-item">
+      <a *ngIf="currentIndex == maxIndex"  class="nav-link active" (click)="playSlides = !playSlides; replaySlider()">
+        <i class="fa fa-repeat" aria-hidden="true" ></i> 
+        <small> {{ currentIndex }}/{{ maxIndex }}</small>
+      </a>
+      <a *ngIf="currentIndex != maxIndex"  class="nav-link active" (click)="playSlides = !playSlides; playSlider(1)">
+        <i  [class]="playSlides ? 'fa fa-pause':'fa fa-play'" aria-hidden="true"></i> 
+        <small> {{ currentIndex }}/{{ maxIndex }}</small>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link">
+        <small>Speed: </small> 
+        <input type="range" min="300" max="2000" step="100" value="1300" #speed (change)="speedSlider=speed.value" style="width: 100px;">
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="modal" data-target="#branchModal">
+        <i class="fa fa-code-fork" aria-hidden="true"></i>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" (click)="playSlides = !playSlides; playSlider(-1)">
+        <i class="fa fa-backward" aria-hidden="true"></i>
+      </a>
+    </li>
+  </ul>
+  <div class="row">
+	 <input type="range" min="1" [max]="maxIndex" step="1" [value]="currentIndex" #inputslider (change)="changeSlide(inputslider.value)" class="svg-slider">
+  </div>
 </div>

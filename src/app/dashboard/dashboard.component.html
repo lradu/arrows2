@@ -19,20 +19,20 @@
       </li>
       <!-- Diagrams -->
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" (click)="showDiagrams=true">
           <i class="fa fa-list-alt" aria-hidden="true"></i> Diagrams
         </a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="diagrams" (click)="onEvent($event)">
-          <diagrams></diagrams>
+          <diagrams *ngIf="showDiagrams"></diagrams>
         </div>
       </li>
       <!-- Share -->
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <a class="nav-link dropdown-toggle" href="http://example.com" id="responsiveNavbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" (click)="showAccess=true">
           <i class="fa fa-share-square-o" aria-hidden="true"></i> Share
         </a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="users" (click)="onEvent($event)">
-          <access></access>
+          <access *ngIf="showAccess"></access>
         </div>
       </li>
     </ul>
