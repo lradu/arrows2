@@ -10,12 +10,12 @@ export class SliderComponent implements OnInit {
 	public dbref: any;
 	public user: any;
 
-	public playSlides: boolean = false;
-	public speedSlider: number = 1300;
+	public playSlides: boolean = false;			// turn off the slides transition
+	public speedSlider: number = 1300;			// duration of a transition
 
-	public currentIndex: number = 1;
-	public maxIndex: number = 0;
-	public currentDiagram: string;
+	public currentIndex: number = 1;   			// current point in history for the current diagram
+	public maxIndex: number = 0;  					// last point in history for the current diagram
+	public currentDiagram: string; 					// current diagram
 
   constructor(@Inject(FirebaseApp) firebase: any) {
   	this.dbref = firebase.database().ref();

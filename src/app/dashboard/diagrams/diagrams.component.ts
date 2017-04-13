@@ -12,12 +12,11 @@ export class DiagramsComponent implements AfterViewInit {
 	public dbref: any;
 	public user: any;
 
-	public diagrams: any;
-	public diagramsKey: any;
+	public diagrams: any;              // diagram list
+	public diagramsKey: any;           // diagram list copy
 
-	public asc: boolean;
-	public col: string;
-	public date: string;
+	public asc: boolean;               // sort - ascending/descending
+	public col: string;                // sort - column
 
   constructor(
   	@Inject(FirebaseApp) firebase: any,
@@ -26,7 +25,6 @@ export class DiagramsComponent implements AfterViewInit {
   	) {
   	this.dbref = firebase.database().ref();
   	this.user = firebase.auth().currentUser;
-  	this.date = new Date().toLocaleDateString();
   	this.diagramsKey = {};
   	this.diagrams = [];
   }

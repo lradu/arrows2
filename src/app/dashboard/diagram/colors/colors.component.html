@@ -1,2 +1,9 @@
-<div *ngFor='let c of colors' class="color-circle mr-1 ml-1" [style.background-color]='c' title="{{ c }}" (click)="getColor(c)">
-</div>
+<table class="table">
+  <tbody *ngFor="let group of colors">
+    <tr *ngFor='let color of group' (click)="getColor(color)">
+      <td>{{ color }}</td>
+      <td [style.background-color]='color' style="min-width: 80px;"></td>
+    </tr>
+  </tbody>
+</table>
+

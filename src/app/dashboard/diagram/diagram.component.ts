@@ -13,32 +13,31 @@ import { Relationship } from './graph/relationship';
 })
 
 export class DiagramComponent implements AfterViewInit  {
-	public svg: any;
+	public svg: any;												// diagram svg
 	public gNodes: any;
 	public gCaptions: any;
 	public gOverlay: any;
 	public gRelationships: any;
-	public zoom: any;
+	public zoom: any; 											// d3 zoom
 	public model: Model;
-	public groups: any;
 
 	public dbref: any;
 	public user: any;
-	public currentDiagram: string;
-	public currentNode: any;
-	public currentR: any;
-	public access: string;
+	public currentDiagram: string;					// current diagram
+	public currentNode: any;								// current node
+	public currentR: any;										// current relationship
+	public access: string;									// user's access to current diagram
 
-	public showTools: boolean;
-	public showNodeTools: boolean;
-	public mirrorNode: any;
-	public nodeLocked: boolean = false;
-	public relLocked: boolean = false;
-	public relIndex: boolean = true;
-	public removeLocked: boolean = false;
-	public showSlider: boolean = false;
+	public showTools: boolean;							// show edit component
+	public showNodeTools: boolean;					// node/relationship edit form switch
+	public mirrorNode: any;									// if mirrorNode.isLocked == True: apply styles to node on click
+	public nodeLocked: boolean = false;			// if True: create a new node on click
+	public relLocked: boolean = false;			// if True && relIndex == True: create a relationship between the two nodes
+	public relIndex: boolean = true;				// if False: change currentNode
+	public removeLocked: boolean = false;   // remove node/relationship on click event
+	public showSlider: boolean = false;			// show slider component
 	
-	public propColor: number;
+	public propColor: number;								// identifies the color field for node(text color or background color)
 
 	constructor(
 		private af: AngularFire, 
@@ -975,27 +974,6 @@ export class DiagramComponent implements AfterViewInit  {
 								});
 						});
 			});
-		// this.dbref
-		// 	.child('diagrams/' + this.currentDiagram + '/data')
-		// 	.once('value', 
-		// 		(snap) => { 
-		// 			snap.ref.parent
-		// 				.child('history')
-		// 				.update({
-		// 					[this.currentIndex]: snap.val()
-		// 				});
-		// 		}).then(
-		// 		(success) => {
-		// 			this.maxIndex = this.currentIndex;
-		// 			this.dbref
-		// 				.child('diagrams/' + this.currentDiagram + '/history')
-		// 				.once('value', 
-		// 					(snapShot) => {
-		// 						for(let i = snapShot.numChildren(); i > this.maxIndex; i--){
-		// 							snapShot.ref.child('' + i).remove();
-		// 						}
-		// 					});
-		// 		});
 	}
 	changeHistory(index){
 		this.dbref

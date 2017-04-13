@@ -14,12 +14,10 @@ export class AccessComponent implements AfterViewInit {
 	public users: any;
 	public error: any;
 	public currentDiagram: string;
-	public date: string;
 
   constructor(@Inject(FirebaseApp) firebase: any, private ref: ChangeDetectorRef) {
   	this.dbref = firebase.database().ref();
   	this.user = firebase.auth().currentUser;
-  	this.date = new Date().toLocaleDateString();
   }
 
   ngAfterViewInit() {
@@ -56,6 +54,7 @@ export class AccessComponent implements AfterViewInit {
   }
 
   inviteUser(email, access){
+    let date = new Date().toLocaleDateString();
   	if(email == this.user.email){
   		this.error = "You cannot change your status.";
   		setTimeout(() => {
@@ -79,8 +78,8 @@ export class AccessComponent implements AfterViewInit {
   									[snapChild.key]: {   // add user key to diagram
   										"access": access,
   										"email": email,
-  										"dateAdded": this.date,
-  										"lastUpdate": this.date
+  										"dateAdded": date,
+  										"lastUpdate": date
   									}
   								});
   						});

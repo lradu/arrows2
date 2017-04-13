@@ -22,17 +22,17 @@ export class DashboardComponent implements AfterViewInit {
 	public dbref: any;
 	public user: any;
 
-	public title: string;
-	public currentDiagram: string;
+	public title: string;																			// diagram title
+	public currentDiagram: string;														// current diagram
 
 	public importFileName: string = "Choose file...";
-	public importError: string;
-	public importReady: string;
-	public importData: any;
-	public importSuccess: string;
+	public importError: string;																// import error message
+	public importReady: string;																// importing... message
+	public importData: any;																		// if data is valid
+	public importSuccess: string;															// import success message
 
-	public showDiagrams: boolean = false;
-	public showAccess:boolean = false;
+	public showDiagrams: boolean = false;											// show diagrams component
+	public showAccess:boolean = false;												// show access component
 
 
 	constructor(
