@@ -3,37 +3,36 @@ import { AngularFire, FirebaseApp } from 'angularfire2'
 import { Router } from '@angular/router';
 
 import { DiagramComponent } from './diagram/diagram.component';
-import { DiagramsComponent } from './diagrams/diagrams.component';
-import { AccessComponent } from './access/access.component';
+import { DiagramListComponent } from './diagram-list/diagram-list.component';
+import { AccessListComponent } from './access-list/access-list.component';
 
-import { Node } from './diagram/graph/node';
+import { Node } from './diagram/models/node.model';
 import { ExportData } from './dashboard.service';
-import { AddData } from './diagram/diagram.service';
+import { Database } from './diagram/shared/diagram.service';
 import * as d3 from 'd3';
 
 @Component({
   selector: 'dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
-  providers: [ExportData, AddData]
+  providers: [ExportData, Database]
 })
 
 export class DashboardComponent implements AfterViewInit {
 	public dbref: any;
 	public user: any;
 
-	public title: string;																			// diagram title
-	public currentDiagram: string;														// current diagram
+	public title: string;
+	public currentDiagram: string;
 
 	public importFileName: string = "Choose file...";
-	public importError: string;																// import error message
-	public importReady: string;																// importing... message
-	public importData: any;																		// if data is valid
-	public importSuccess: string;															// import success message
+	public importError: string;
+	public importReady: string;
+	public importData: any;
+	public importSuccess: string;
 
-	public showDiagrams: boolean = false;											// show diagrams component
-	public showAccess:boolean = false;												// show access component
-
+	public showDiagrams: boolean = false;
+	public showAccess:boolean = false;
 
 	constructor(
 		private af: AngularFire,
@@ -41,7 +40,7 @@ export class DashboardComponent implements AfterViewInit {
 		private router: Router,
 		private ref: ChangeDetectorRef,
 		private exportData: ExportData,
-		private addData: AddData
+		private db: Database
 		) {
 		this.dbref = firebase.database().ref();
 		this.user = firebase.auth().currentUser;
@@ -55,13 +54,6 @@ export class DashboardComponent implements AfterViewInit {
 				(snap) => {
 					//current diagram
 					this.currentDiagram = snap.val();
-
-					//update date
-					this.dbref
-						.child('diagrams/' + this.currentDiagram + '/info')
-						.update({
-							"lastUpdate": date
-						});
 						
 					//title
 					this.dbref
@@ -96,6 +88,7 @@ export class DashboardComponent implements AfterViewInit {
 		csv.click();
 		csv.remove();
 	}
+	
 	importCSV(event){
 		this.importError = "";
 		let nodes = [];
@@ -147,15 +140,17 @@ export class DashboardComponent implements AfterViewInit {
 			}
 		}
 	}
+
 	importNodes(){
 		let date = new Date().toLocaleDateString();
 		this.importReady = "Importing...";
-		this.addData.newDiagram(this.importData, date);
+		//this.db.newDiagram(this.importData, date);
 		this.importReady = "";
 		this.importFileName = "Choose file...";
 		this.importSuccess = "Success.";
 		setTimeout(()=>{ this.importSuccess = ""; }, 4000);
 	}
+
 	exportCSV(path){	
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data/' + path)
@@ -164,9 +159,11 @@ export class DashboardComponent implements AfterViewInit {
 					this.exportData.csv(snap.val(), path);
 				});		
 	}
+
 	exportSVG(){
 		this.exportData.svg();
 	}
+
 	exportCypher(){
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data')
@@ -175,6 +172,7 @@ export class DashboardComponent implements AfterViewInit {
 					this.exportData.cypher(snap.val());
 				});	
 	}
+
 	exportMarkup(){
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data')
@@ -183,6 +181,7 @@ export class DashboardComponent implements AfterViewInit {
 					this.exportData.markup(snap.val());
 				});
 	}
+
 	onEvent(event) {
 	   event.stopPropagation();
 	}

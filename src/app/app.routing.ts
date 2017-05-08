@@ -7,7 +7,7 @@ import { AuthGuard } from './auth/auth-guard.service';
 import { DashboardComponent } from './dashboard/dashboard.component';
 
 const appRoutes: Routes = [
-  { path: '', component: HomeComponent }
+    { path: '', component: HomeComponent }
 ];
 
 export const AppRouting: ModuleWithProviders = RouterModule.forRoot(appRoutes);

@@ -1,103 +1,46 @@
 <!-- Graph diagram -->
 <div id="diagram"></div>
 
-<!-- Right bar tools -->
-<div id="tools" class="col-lg-3 col-md-4 col-xs-12 offset-lg-9 offset-md-8" *ngIf="showTools">
+<!-- Edit form -->
+<div id="edit-form" class="col-lg-3 col-md-4 col-xs-12 offset-lg-9 offset-md-8" *ngIf="showEditForm">
 	<div class="form-group row" >
-		<a (click)="closeTools()" style="font-size: 1.4em; cursor: pointer;"><i class="fa fa-times-circle-o" aria-hidden="true"></i></a>
+		<a (click)="showEditForm = false;" style="font-size: 1.4em; cursor: pointer;">
+			<i class="fa fa-times-circle-o" aria-hidden="true"></i>
+		</a>
+		<!-- <node-form *ngIf="showEditNode"></node-form>
+		<relationship-form *ngIf="!showEditNode"></relationship-form> -->
 	</div>
-	<!-- Edit Node -->
-	<form name="form" (ngSubmit)="saveNode()" *ngIf="showNodeTools" style="background-color: white;">
-	  <div class="form-group">
-	    <label for="caption">Caption</label>
-	    <input type="text" class="form-control" id="caption" [(ngModel)]="currentNode.caption" name="caption">
-	  </div>
-	  <div class="form-group">
-	    <label for="properties">Properties</label>
-	    <textarea class="form-control" id="properties" rows="6" [(ngModel)]="currentNode.properties.text" name="properties"></textarea>
-	  </div>
-	  <div class="form-group">
-	  	<div class="btn-group" data-toggle="buttons">
-	  	  <label class="btn btn-secondary" [class.active]="!currentNode.isRectangle" (click)="currentNode.isRectangle=false">
-	  	    <input type="radio" name="options" id="option1" autocomplete="off"> <i class="fa fa-circle-thin fa-2x" aria-hidden="true"></i>
-	  	  </label>
-	  	  <label class="btn btn-secondary" [class.active]="currentNode.isRectangle" (click)="currentNode.isRectangle=true">
-	  	    <input type="radio" name="options" id="option2" autocomplete="off"> <i class="fa fa-square-o fa-2x" aria-hidden="true"></i>
-	  	  </label>
-	  	</div>
-	  </div>
-	  <div class="form-group">
-	    <div class="input-group">
-	      <input type="text" class="form-control" id="text-color" [(ngModel)]="currentNode.style.color" name="textColor">
-        <button class="btn btn-secondary" type="button" [style.color]="currentNode.style.color" id="text-color-button" data-toggle="modal" data-target="#colorpicker"  (click)="propColor=1">Text Color</button>
-	    </div>
-	  </div>
-	  <div class="form-group">
-	    <div class="input-group">
-	      <input type="text" class="form-control" id="bg-color" [(ngModel)]="currentNode.style.fill" name="bgColor">
-        <button class="btn btn-secondary" type="button" [style.background-color]="currentNode.style.fill" id="bg-color-button" data-toggle="modal" data-target="#colorpicker" (click)="propColor=2">Background</button>
-	    </div>
-	  </div>
-	  <div class="form-group">
-	  	<button type="button" class="btn btn-danger mb-2" (click)="deleteNode()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
-	  	<button type="submit" class="btn btn-primary float-right">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
-	  </div>
-	</form> <!-- End Edit Node -->
-	<!-- Edit Relationship -->
-	<form name="rForm" (ngSubmit)="saveR()" *ngIf="!showNodeTools">
-		<div class="form-group">
-			<button type="button" class="btn btn-secondary" (click)="reverseR()">Reverse <i class="fa fa-retweet" aria-hidden="true"></i></button>
-		</div>
-	  <div class="form-group">
-	    <label for="caption">Type</label>
-	    <input type="text" class="form-control" id="caption" [(ngModel)]="currentR.type" name="type">
-	  </div>
-	  <div class="form-group">
-	    <label for="properties">Properties</label>
-	    <textarea class="form-control" id="properties" rows="6" [(ngModel)]="currentR.properties.text" name="properties"></textarea>
-	  </div>
-	 	<div class="form-group">
-	    <div class="input-group">
-	      <input type="text" class="form-control" id="bg-color" [(ngModel)]="currentR.style.fill" name="fillColor">
-        <button class="btn btn-secondary" type="button" [style.color]="currentR.style.fill" id="rl-color-button" data-toggle="modal" data-target="#colorpicker">
-        	<i class="fa fa-long-arrow-right" aria-hidden="true"></i>
-        </button>
-	    </div>
-	  </div>
-	  <div class="form-group">
-	  	<button type="button" class="btn btn-danger mb-2" (click)="deleteR()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
-	  	<button type="submit" class="btn btn-primary float-right">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
-	  </div>
-	</form> <!-- End Edit Relationship -->
-</div> <!-- End Right bar tools -->
+</div>
 
-<!-- Left bar tools -->
+<!-- Tools -->
 <div id="diagram-tools" class="btn-group-vertical">
-	<button type="button" class="btn btn-secondary btn-tool" (click)="zoomChange(1)"><i class="fa fa-plus" aria-hidden="true"></i></button>
-	<button type="button" class="btn btn-secondary btn-tool" (click)="zoomChange(0)"><i class="fa fa-minus" aria-hidden="true"></i></button>
+	<button type="button" class="btn btn-secondary btn-tool" (click)="zoomIn()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+	<button type="button" class="btn btn-secondary btn-tool" (click)="zoomOut()"><i class="fa fa-minus" aria-hidden="true"></i></button>
 	<button type="button" class="btn btn-secondary btn-tool mt-2 mb-2" (click)="zoomFit()"><i class="fa fa-crosshairs" aria-hidden="true"></i></button>
 	<div *ngIf="access!='Read Only'" class="btn-group-vertical">
-	  <button type="button" class="btn btn-secondary btn-tool" (click)="nodeLocked=false; removeLocked=false; relLocked=false; mirrorNode.isLocked=!mirrorNode.isLocked;">
-	  	<img *ngIf="!mirrorNode.isLocked" src="../assets/img/paintbrush_off.svg">
-	  	<img *ngIf="mirrorNode.isLocked" src="../assets/img/paintbrush_on.svg">
+	  <button type="button" class="btn btn-secondary btn-tool"
+	  	(click)="addNode=false; deleteElement=false; addRel=false; copyStyle=!copyStyle;"
+	  	>
+	  	<img *ngIf="!copyStyle" src="../assets/img/paintbrush_off.svg">
+	  	<img *ngIf="copyStyle" src="../assets/img/paintbrush_on.svg">
 	  </button>
-		<button type="button" [class]="nodeLocked ? 'btn btn-danger':'btn btn-secondary btn-tool'" (click)="removeLocked=false; mirrorNode.isLocked=false; relLocked=false; nodeLocked=!nodeLocked">
+		<button type="button" [class]="addNode ? 'btn btn-danger':'btn btn-secondary btn-tool'" (click)="deleteElement=false; copyStyle=false; addRel=false; addNode=!addNode">
 			<i class="fa fa-plus-circle" aria-hidden="true"></i>
 		</button>
-		<button type="button" [class]="relLocked ? 'btn btn-danger':'btn btn-secondary btn-tool'" (click)="removeLocked=false; mirrorNode.isLocked=false; nodeLocked=false; relLocked=!relLocked;">
+		<button type="button" [class]="addRel ? 'btn btn-danger':'btn btn-secondary btn-tool'" (click)="deleteElement=false; copyStyle=false; addNode=false; addRel=!addRel;">
 			<i class="fa fa-arrows-h" aria-hidden="true"></i>
 		</button>
-		<button type="button" [class]="removeLocked ? 'btn btn-danger':'btn btn-secondary btn-tool'" (click)="mirrorNode.isLocked=false; nodeLocked=false; relLocked=false; removeLocked=!removeLocked">
+		<button type="button" [class]="deleteElement ? 'btn btn-danger':'btn btn-secondary btn-tool'" (click)="copyStyle=false; addNode=false; addRel=false; deleteElement=!deleteElement">
 			<i class="fa fa-trash-o" aria-hidden="true"></i>
 		</button>
-	  <div *ngIf="nodeLocked || mirrorNode.isLocked" id="mirrorNode" [style.top]="nodeLocked ? '36px':'0px'" [style.color]="mirrorNode.color" [style.border-radius]="mirrorNode.isRectangle ? '5px':'14px'" [style.background-color]="mirrorNode.fill">
+	  <div *ngIf="addNode || copyStyle" id="mirrorNode" [style.top]="addNode ? '36px':'0px'" [style.color]="mirrorNode.color" [style.border-radius]="mirrorNode.isRectangle ? '5px':'14px'" [style.background-color]="mirrorNode.fill">
 	 	 T
 	  </div>
-	  <button type="button" class="btn btn-secondary btn-tool mt-2" (click)="changeHistory(-1)"><i class="fa fa-level-up fa-rotate-270" aria-hidden="true"></i></button>
-	  <button type="button" class="btn btn-secondary btn-tool mb-2" (click)="changeHistory(1)"><i class="fa fa-level-up fa-rotate-90" aria-hidden="true"></i></button>
+	  <button type="button" class="btn btn-secondary btn-tool mt-2" (click)="undo()"><i class="fa fa-level-up fa-rotate-270" aria-hidden="true"></i></button>
+	  <button type="button" class="btn btn-secondary btn-tool mb-2" (click)="redo()"><i class="fa fa-level-up fa-rotate-90" aria-hidden="true"></i></button>
 	  <button type="button" class="btn btn-secondary btn-tool" (click)="showSlider=!showSlider;"><i class="fa fa-play" aria-hidden="true"></i></button>
 	</div>
-</div> <!-- End Left bar tools -->
+</div>
 
 <!-- Slider -->
 <slider *ngIf="showSlider"></slider> 

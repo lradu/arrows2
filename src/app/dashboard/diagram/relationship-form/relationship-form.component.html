@@ -1,0 +1,25 @@
+<form name="rForm" (ngSubmit)="save()">
+  <div class="form-group">
+    <button type="button" class="btn btn-secondary" (click)="reverse()">Reverse <i class="fa fa-retweet" aria-hidden="true"></i></button>
+  </div>
+  <div class="form-group">
+    <label for="caption">Type</label>
+    <input type="text" class="form-control" id="caption" [(ngModel)]="relationship.type" name="type">
+  </div>
+  <div class="form-group">
+    <label for="properties">Properties</label>
+    <textarea class="form-control" id="properties" rows="6" [(ngModel)]="relationship.properties" name="properties"></textarea>
+  </div>
+  <div class="form-group">
+    <div class="input-group">
+      <input type="text" class="form-control" id="bg-color" [(ngModel)]="relationship.fill" name="fillColor">
+      <button class="btn btn-secondary" type="button" [style.color]="relationship.fill" id="rl-color-button" data-toggle="modal" data-target="#colorpicker">
+        <i class="fa fa-long-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+  <div class="form-group">
+    <button type="button" class="btn btn-danger mb-2" (click)="deleteR()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
+    <button type="submit" class="btn btn-primary float-right">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
+  </div>
+</form>

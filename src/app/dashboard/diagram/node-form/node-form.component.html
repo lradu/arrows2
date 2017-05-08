@@ -1,0 +1,36 @@
+<form name="form" (ngSubmit)="save()" style="background-color: white;">
+  <div class="form-group">
+    <label for="caption">Caption</label>
+    <input type="text" class="form-control" id="caption" [(ngModel)]="node.caption" name="caption">
+  </div>
+  <div class="form-group">
+    <label for="properties">Properties</label>
+    <textarea class="form-control" id="properties" rows="6" [(ngModel)]="node.properties" name="properties"></textarea>
+  </div>
+  <div class="form-group">
+    <div class="btn-group" data-toggle="buttons">
+      <label class="btn btn-secondary" [class.active]="!node.isRectangle" (click)="node.isRectangle = false">
+        <input type="radio" name="options" id="option1" autocomplete="off"> <i class="fa fa-circle-thin fa-2x" aria-hidden="true"></i>
+      </label>
+      <label class="btn btn-secondary" [class.active]="node.isRectangle" (click)="node.isRectangle = true">
+        <input type="radio" name="options" id="option2" autocomplete="off"> <i class="fa fa-square-o fa-2x" aria-hidden="true"></i>
+      </label>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="input-group">
+      <input type="text" class="form-control" id="text-color" [(ngModel)]="node.color" name="textColor">
+    <button class="btn btn-secondary" type="button" [style.color]="node.color" id="text-color-button" data-toggle="modal" data-target="#colorpicker"  (click)="propColor=1">Text Color</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="input-group">
+      <input type="text" class="form-control" id="bg-color" [(ngModel)]="node.fill" name="bgColor">
+    <button class="btn btn-secondary" type="button" [style.background-color]="node.fill" id="bg-color-button" data-toggle="modal" data-target="#colorpicker" (click)="propColor=2">Background</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <button type="button" class="btn btn-danger mb-2" (click)="deleteNode()">Delete <i class="fa fa-trash" aria-hidden="true"></i></button>
+    <button type="submit" class="btn btn-primary float-right">Save <i class="fa fa-check-square-o" aria-hidden="true"></i></button>
+  </div>
+</form>

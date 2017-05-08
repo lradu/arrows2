@@ -3,112 +3,59 @@ import { Router } from '@angular/router';
 import { HttpModule } from '@angular/http';
 
 import { AngularFire, FirebaseApp } from 'angularfire2';
-import { Node } from '../dashboard/diagram/graph/node';
 
 @Component({
   templateUrl: './signup.component.html'
 })
 
 export class SignupComponent {
-	public error: any;
-  public f: any;
-  public date: string;
+    public error: any;
+    public date: string;
 
-  constructor(
-    private af: AngularFire,
-    @Inject(FirebaseApp) firebase: any, 
-    private router: Router) {
-    this.f = firebase;
-    this.date = new Date().toLocaleDateString();
-  }
+    constructor(
+        private af: AngularFire,
+        @Inject(FirebaseApp) firebase: any, 
+        private router: Router) {
+    }
 
   onSubmit(formData) {
-  	if(formData.valid) {
-  		this.af.auth.createUser({
-  			email: formData.value.email,
-  			password: formData.value.password
-  		}).then(
-  			(success) => {
-          this.createUserData();
-  		}).catch(
-  			(err) => {
-  				this.error = err.message;
-  		})
-  	}
-  }
-
-  createUserData(){
-    let node = new Node();
-    let user = this.f.auth().currentUser;
-    this.f
-      .database()
-      .ref('diagrams/')
-      .push({
-      "data": {
-        "nodes": {
-          "firstNode": node
-        }
-      },
-      "info" : {
-        "created" : this.date,
-        "lastUpdate" : this.date,
-        "title" : "My new diagram"
-      },
-      "users" : {
-        [user.uid] : {
-          "access" : "Owner",
-          "dateAdded" : this.date,
-          "email" : user.email,
-          "lastUpdate" : this.date
-        }
-      }
-    }).then(
-      (newD) => {
-        this.f
-          .database()
-          .ref('users/' + user.uid)
-          .update({
-            "email": user.email,
-            "currentDiagram": newD.key,
-            "sortAccess": {
-              "asc": true,
-              "col": "title"
-            },
-            "diagrams": {
-              [newD.key]: true
-            }
+    if(formData.valid) {
+        this.af.auth.createUser({
+            email: formData.value.email,
+            password: formData.value.password
         }).then(
-          (s) => {
-            this.router.navigate(['/dashboard']);
-          }
-        );
-      }
-    );
+            (success) => {
+          this.router.navigate(['/dashboard']);
+        }).catch(
+            (err) => {
+                this.error = err.message;
+        })
+    }
   }
 }
 
 @Component({
-  templateUrl: './login.component.html'
+    templateUrl: './login.component.html'
 })
 
 export class LoginComponent {
-	public error: any;
+    public error: any;
 
   constructor(private af: AngularFire, private router: Router) {}
 
   onSubmit(formData) {
-  	if(formData.valid) {
-  		this.af.auth.login({
-  			email: formData.value.email,
-  			password: formData.value.password
-  		}).then(
-  			(success) => {
-  				this.router.navigate(['/dashboard']);
-  		}).catch(
-  			(err) => {
-  				this.error = err.message;
-  		})
-  	}
+    if(formData.valid) {
+        this.af.auth.login({
+            email: formData.value.email,
+            password: formData.value.password
+        }).then(
+            (success) => {
+                this.router.navigate(['/dashboard']);
+        }).catch(
+            (err) => {
+                this.error = err.message;
+        })
+    }
   }
 }
 
@@ -117,24 +64,24 @@ export class LoginComponent {
 })
 
 export class ResetpassComponent {
-  public auth: any;
-  public error: any;
+    public auth: any;
+    public error: any;
 
-  constructor(private ref: ChangeDetectorRef, private af: AngularFire, @Inject(FirebaseApp) firebase: any, private router: Router) {
-    this.auth = firebase.auth()
-  }
-
-  onSubmit(formData) {
-    if(formData.valid) {
-      this.auth.sendPasswordResetEmail(formData.value.email)
-      .then( 
-      	(response) => {
-        	this.router.navigate(['/login']);
-      }).catch( 
-      	(err) => {
-          this.error = err.message;
-          this.ref.detectChanges();
-        })
+    constructor(private ref: ChangeDetectorRef, private af: AngularFire, @Inject(FirebaseApp) firebase: any, private router: Router) {
+        this.auth = firebase.auth()
     }
-  }
+
+    onSubmit(formData) {
+        if(formData.valid) {
+            this.auth.sendPasswordResetEmail(formData.value.email)
+            .then( 
+                (response) => {
+                    this.router.navigate(['/login']);
+            }).catch( 
+                (err) => {
+                    this.error = err.message;
+                    this.ref.detectChanges();
+            })
+        }
+    }
 }

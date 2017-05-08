@@ -8,22 +8,22 @@ import { dashRouting } from './dashboard.routing';
 import { DashboardComponent } from './dashboard.component';
 import { ProfileComponent } from './profile/profile.component';
 import { DiagramModule } from './diagram/diagram.module';
-import { DiagramsComponent } from './diagrams/diagrams.component';
-import { AccessComponent } from './access/access.component';
+import { DiagramListComponent } from './diagram-list/diagram-list.component';
+import { AccessListComponent } from './access-list/access-list.component';
 
 @NgModule({
-  imports:      [ 
-    dashRouting,
-    FormsModule,
-    CommonModule,
-    DiagramModule
-   ],
-  providers: [AuthGuard],
-  declarations: [ 
-    DashboardComponent,
-    ProfileComponent,
-    DiagramsComponent,
-    AccessComponent,
-  ]
+    imports:[ 
+        dashRouting,
+        FormsModule,
+        CommonModule,
+        DiagramModule
+    ],
+        providers: [AuthGuard],
+        declarations: [ 
+        DashboardComponent,
+        ProfileComponent,
+        DiagramListComponent,
+        AccessListComponent,
+    ]
 })
-export class DashModule { }
+export class DashModule {}

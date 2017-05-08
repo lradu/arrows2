@@ -23,7 +23,7 @@
           <i class="fa fa-list-alt" aria-hidden="true"></i> Diagrams
         </a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="diagrams" (click)="onEvent($event)">
-          <diagrams *ngIf="showDiagrams"></diagrams>
+          <diagram-list *ngIf="showDiagrams"></diagram-list>
         </div>
       </li>
       <!-- Share -->
@@ -32,7 +32,7 @@
           <i class="fa fa-share-square-o" aria-hidden="true"></i> Share
         </a>
         <div class="dropdown-menu" aria-labelledby="responsiveNavbarDropdown" id="users" (click)="onEvent($event)">
-          <access *ngIf="showAccess"></access>
+          <access-list *ngIf="showAccess"></access-list>
         </div>
       </li>
     </ul>
