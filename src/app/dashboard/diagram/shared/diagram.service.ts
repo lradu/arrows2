@@ -97,7 +97,8 @@ export class Database {
                 "radius": node.radius,
                 "fill": node.fill,
                 "color": node.color,
-                "properties": node.properties
+                "properties": node.properties,
+                "propertiesWidth": node.propertiesWidth
             }).then((success) => {
                     this.updateHistory(diagram);
             });
@@ -137,7 +138,8 @@ export class Database {
             .update({
                 "type": rel.type,
                 "fill": rel.fill,
-                "properties": rel.properties
+                "properties": rel.properties,
+                "propertiesWidth": rel.propertiesWidth
             }).then(
         (success) =>{
             this.updateHistory(diagram);
@@ -181,7 +183,9 @@ export class Database {
                             snap.ref.parent.child('history')
                                 .update({
                                     ['' + (snap.val() + 1)]: snapShot.val()
-                                })
+                                }).then(() => {
+                                    this.lastUpdate(diagram);        
+                                });
                             snap.ref.parent
                                 .update({
                                     'currentIndex': snap.val() + 1
@@ -199,6 +203,17 @@ export class Database {
                         });
             });
     }
+
+    lastUpdate(diagram) {
+        let date = new Date().toLocaleDateString();
+
+        this.dbref
+            .child("diagrams/"  + diagram + "/info")
+            .update({
+                "lastUpdate": date
+            });
+    }
+    
     changeHistory(index, diagram){
         this.dbref
             .child('diagrams/' + diagram + '/currentIndex')

@@ -9,23 +9,37 @@ import { AngularFire, FirebaseApp } from 'angularfire2';
 })
 
 export class SignupComponent {
-    public error: any;
-    public date: string;
+    private error: any;
+    private date: string;
+    private f: any;
 
     constructor(
         private af: AngularFire,
         @Inject(FirebaseApp) firebase: any, 
         private router: Router) {
+        this.f = firebase;
     }
 
   onSubmit(formData) {
     if(formData.valid) {
+        let dbref = this.f.database().ref();
+
         this.af.auth.createUser({
             email: formData.value.email,
             password: formData.value.password
         }).then(
             (success) => {
-          this.router.navigate(['/dashboard']);
+            let user = this.f.auth().currentUser;   
+            dbref.child('users/' + user.uid)
+                .update({
+                    "email" :  user.email,
+                    "sortAccess": {        
+                        "asc": true,        
+                        "col": "title"        
+                    }
+                }).then(() => {
+                    this.router.navigate(['/dashboard']);
+                });
         }).catch(
             (err) => {
                 this.error = err.message;

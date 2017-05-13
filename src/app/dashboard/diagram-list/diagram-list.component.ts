@@ -23,10 +23,10 @@ export class DiagramListComponent implements AfterViewInit {
     public diagrams: any;
 
     // sort - ascending/descending
-    public asc: boolean;
+    public asc: boolean = false;
 
     // sort - column
-    public col: string;
+    public col: string = 'title';
 
     constructor(
         @Inject(FirebaseApp) firebase: any,
@@ -44,8 +44,10 @@ export class DiagramListComponent implements AfterViewInit {
         this.dbref
             .child('users/' + this.user.uid + '/sortAccess')
             .once('value', (sortAccess) => {
-                this.col = sortAccess.val().col;
-                this.asc = sortAccess.val().asc;
+                if(sortAccess.val()) {
+                    this.col = sortAccess.val().col;
+                    this.asc = sortAccess.val().asc;
+                }
 
                 sortAccess.ref.parent
                     .child('diagrams')

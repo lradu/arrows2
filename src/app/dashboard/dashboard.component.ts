@@ -7,7 +7,6 @@ import { DiagramListComponent } from './diagram-list/diagram-list.component';
 import { AccessListComponent } from './access-list/access-list.component';
 
 import { Node } from './diagram/models/node.model';
-import { ExportData } from './dashboard.service';
 import { Database } from './diagram/shared/diagram.service';
 import * as d3 from 'd3';
 
@@ -15,7 +14,7 @@ import * as d3 from 'd3';
   selector: 'dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
-  providers: [ExportData, Database]
+  providers: [Database]
 })
 
 export class DashboardComponent implements AfterViewInit {
@@ -31,15 +30,18 @@ export class DashboardComponent implements AfterViewInit {
 	public importData: any;
 	public importSuccess: string;
 
+	public exportData: any;
+	public exportType: string;
+
 	public showDiagrams: boolean = false;
-	public showAccess:boolean = false;
+	public showAccess: boolean = false;
+	public showExport: boolean = false;
 
 	constructor(
 		private af: AngularFire,
 		@Inject(FirebaseApp) firebase: any,
 		private router: Router,
 		private ref: ChangeDetectorRef,
-		private exportData: ExportData,
 		private db: Database
 		) {
 		this.dbref = firebase.database().ref();
@@ -47,11 +49,12 @@ export class DashboardComponent implements AfterViewInit {
 	}
 	
 	ngAfterViewInit(){
-		let date = new Date().toLocaleDateString();
 		this.dbref
 			.child('users/' + this.user.uid + '/currentDiagram')
 			.on('value',
 				(snap) => {
+					if(!snap.val()){ return; }
+					
 					//current diagram
 					this.currentDiagram = snap.val();
 						
@@ -77,11 +80,14 @@ export class DashboardComponent implements AfterViewInit {
 	}
 	
 	downloadSample(){
-		let head = "caption,id,isRectangle,properties_text,properties_width,radius,style_color,style_fill,style_stroke,style_strokeWidth,x,y\r\n";
+		let node = new Node();
+		let head = Object.keys(node).sort().toString() + "\n";
+
 		let csv = document.createElement('a');
 		let csvContent = head;
 		let blob = new Blob([csvContent],{type: 'text/csv;charset=utf-8;'});
 		let url = URL.createObjectURL(blob);
+
 		csv.href = url;
 		csv.setAttribute('download', 'sample-nodes.csv');
 		document.body.appendChild(csv);
@@ -91,77 +97,76 @@ export class DashboardComponent implements AfterViewInit {
 	
 	importCSV(event){
 		this.importError = "";
-		let nodes = [];
+		let nodes = {};
 		let files = event.target.files;
+
 		if(files.length){
-			let head = "caption,id,isRectangle,properties_text,properties_width,radius,style_color,style_fill,style_stroke,style_strokeWidth,x,y";
+			let node = new Node();
+			let head = Object.keys(node).sort();
 			this.importFileName = files[0].name;
+
+			// parse file
 			let reader = new FileReader();
 			reader.readAsText(files[0]); 
 			reader.onload = (event) => {
 				let data = event.target["result"];
-				let lines = data.split("\r\n");
-				let header = lines[0];
+				let lines = data.split("\n");
+				let header = lines[0].trim(" ").split(',');
 
-				if(header != head || lines.length < 2){
+				// check if headers match
+				if(header.toString() != head.toString() || lines.length < 2){
 					this.importError = "Wrong data format.";
 					return;
 				} else {
-					header = header.split(',');
-					for(let i = 1; i < lines.length; i++){
-						let line = lines[i].split(",");
-						if(line.length == header.length) {
-							let node = new Node()
-							for(let j = 0; j < line.length; j++){
-								let keys = header[j].split("_");
-								if(line[j] === "false"){ line[j] = false }
-								if(line[j] === "true"){ line[j] = true }
-								if(keys.length == 1){
-									if(typeof node[keys[0]] === "number"){ line[j] = Number(line[j]); }
-									node[keys[0]] = line[j] === "null" ? "":line[j];
-								} else {
-									if(typeof node[keys[0]][keys[1]] === "number"){ line[j] = Number(line[j]); }
-									node[keys[0]][keys[1]] = line[j] === "null" ? "":line[j];
-								}
+					// parse data
+					for(var i = 1; i < lines.length; i++) {
+						lines[i] = lines[i].split(',');
+						node = new Node();
+						lines[i].map((x, j) => {
+							if(typeof(node[header[j]]) === 'number'){
+								x = Number(x);
+							} else if(typeof(node[header[j]]) === 'boolean'){
+								x === "true" ? x = true : x = false;
+							} else if(x === 'null'){
+								x = ""
 							}
-							nodes.push(node);
-						}
-					}
-					if(nodes.length){
-						this.importData = {
-							"nodes": nodes
-						}; 
-						this.importReady = "Import";
-					} else {
-						this.importError = "Wrong data format.";
-						return;
+							node[header[j]] = x;
+						});
+						nodes[node.id] = node;
 					}
 				}
+				// data to import
+				this.importData = {
+					"nodes": nodes
+				}; 
+				// shows the import button
+				this.importReady = "Import";
 			}
 		}
 	}
 
 	importNodes(){
 		let date = new Date().toLocaleDateString();
+
 		this.importReady = "Importing...";
-		//this.db.newDiagram(this.importData, date);
+		this.db.newDiagram("Owner", "My new diagram", this.importData, date);
 		this.importReady = "";
 		this.importFileName = "Choose file...";
 		this.importSuccess = "Success.";
-		setTimeout(()=>{ this.importSuccess = ""; }, 4000);
+
+		// hide the success message
+		setTimeout(() => { this.importSuccess = ""; }, 4000);
 	}
 
-	exportCSV(path){	
+	exportCSV(path){ 
 		this.dbref
 			.child('diagrams/' + this.currentDiagram + '/data/' + path)
 			.once("value", 
 				(snap) => {
-					this.exportData.csv(snap.val(), path);
+					this.exportData = snap.val();
+					this.exportType = path + "CSV";
+					this.showExport = true;
 				});		
-	}
-
-	exportSVG(){
-		this.exportData.svg();
 	}
 
 	exportCypher(){
@@ -169,7 +174,9 @@ export class DashboardComponent implements AfterViewInit {
 			.child('diagrams/' + this.currentDiagram + '/data')
 			.once("value", 
 				(snap) => {
-					this.exportData.cypher(snap.val());
+					this.exportData = snap.val();
+					this.exportType = "cypher";
+					this.showExport = true;
 				});	
 	}
 
@@ -178,8 +185,18 @@ export class DashboardComponent implements AfterViewInit {
 			.child('diagrams/' + this.currentDiagram + '/data')
 			.once("value", 
 				(snap) => {
-					this.exportData.markup(snap.val());
+					this.exportData = snap.val();
+					this.exportType = "markup";
+					this.showExport = true;
 				});
+	}
+
+	exportSVG(){
+		let svg = document.getElementsByTagName("svg");
+		if(svg){
+			let rawSvg = new XMLSerializer().serializeToString(svg[0]);
+			window.open( "data:image/svg+xml;base64," + btoa(rawSvg) );
+		}
 	}
 
 	onEvent(event) {

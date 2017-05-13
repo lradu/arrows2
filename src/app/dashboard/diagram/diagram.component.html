@@ -7,8 +7,19 @@
 		<a (click)="showEditForm = false;" style="font-size: 1.4em; cursor: pointer;">
 			<i class="fa fa-times-circle-o" aria-hidden="true"></i>
 		</a>
-		<!-- <node-form *ngIf="showEditNode"></node-form>
-		<relationship-form *ngIf="!showEditNode"></relationship-form> -->
+		<node-form *ngIf="showEditNode"
+			[node]="currentNode"
+			[color] = "color"
+			(saveNode) = "saveNode($event)"
+			(deleteNode) = "deleteNode($event)">
+		</node-form>
+		<relationship-form *ngIf="!showEditNode"
+			[relationship]="currentRel"
+			[color] = "color"
+			(saveR) = "saveR($event)"
+			(deleteR) = "deleteR($event)"
+			(reverseR) = "reverseR($event)">
+		</relationship-form>
 	</div>
 </div>
 

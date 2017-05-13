@@ -7,6 +7,15 @@
     content: "Browse";
 }
 
+export {
+	position: fixed;
+	z-index: 100;
+	height: 100%;
+	width: 100%;
+	background-color: #ffffff;
+	overflow: scroll;
+}
+
 @media (min-width: 992px) {
 	.navbar-brand {
 		display: none;

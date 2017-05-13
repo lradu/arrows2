@@ -31,6 +31,7 @@ export class DiagramComponent implements AfterViewInit  {
     // User
     public currentDiagram: string;
     public access: string;
+    public diagram: any;
 
     // Tools
     public mirrorNode: any;
@@ -40,9 +41,12 @@ export class DiagramComponent implements AfterViewInit  {
     public relIndex: boolean = true;
     public deleteElement: boolean = false;   
 
-    public showSlider: boolean = false
+    public currentNode: any;
+    public currentRel: any;
+    public showSlider: boolean = false;
     public showEditForm: boolean = false;
     public showEditNode: boolean = false;
+    public color: string;
 
     constructor(
         private af: AngularFire, 
@@ -102,7 +106,7 @@ export class DiagramComponent implements AfterViewInit  {
                                                     .update({
                                                         "currentDiagram": key
                                                     });
-                                                    break;
+                                                break;
                                             }
                                         })
                             }
@@ -139,38 +143,34 @@ export class DiagramComponent implements AfterViewInit  {
             })
     }
 
-    /*
+    /* Render */
 
-        Render
-        
-    */
     render(data){
-        let diagram, nodes, relationships;
+        let nodes, relationships;
 
-        diagram = new Diagram();
-        diagram.load(data);
+        this.diagram = new Diagram();
+        this.diagram.load(data);
 
         d3.selectAll('svg.graph > g > *').remove();
         
         nodes = new RenderNodes();
-        nodes.render(this.gNodes, diagram.nodes);
+        nodes.render(this.gNodes, this.diagram.nodes);
 
         relationships = new RenderRelationships();
-        relationships.render(this.gRelationships, diagram.relationships);
+        relationships.render(this.gRelationships, this.diagram.relationships);
 
         this.mirrorNode = {
             "fill": "white",
             "color": "#292b2c",
             "isRectangle": false,
-            "isLocked": false
         }
 
-        this.renderOverlay(diagram);
+        this.renderOverlay();
     }
 
-    renderOverlay(diagram){
+    renderOverlay(){
         let that = this;
-        let closestNode
+        let closestNode;
         let newNode = new Node();
         let start;
         this.svg
@@ -196,7 +196,7 @@ export class DiagramComponent implements AfterViewInit  {
                 .attr("class", "newRelationship");
 
         let nodeOverlays = this.gOverlay.selectAll("rect.node")
-            .data(diagram.nodes)
+            .data(this.diagram.nodes)
 
         nodeOverlays.enter()
             .append("rect")
@@ -216,21 +216,19 @@ export class DiagramComponent implements AfterViewInit  {
                             if(this.addRel){
                                 this.relIndex = !this.relIndex;
                                 if(this.relIndex){
-                                    //this.newR(this.currentNode.id, node.id)
+                                    this.newR(this.currentNode.id, node.id)
                                 }
-                                //this.currentNode = node;
+                                this.currentNode = node;
                             } else {
-                                //this.currentNode = node;
                                 this.copyMirrorNode(node);
-                                //this.showNodeTools = true;
                                 if(!this.copyStyle) {
+                                    this.color = "";
+                                    this.currentNode = node;
                                     this.showEditForm = true;
-                                    //this.showEditNode = true;
+                                    this.showEditNode = true;
                                 }
                             }
-                            //this.ref.detectChanges();
                         } else {
-                            //this.currentNode = node;
                             this.deleteNode(node.id);
                         }
                     }
@@ -241,7 +239,7 @@ export class DiagramComponent implements AfterViewInit  {
                 .on("end", dragEnd));
 
         let relOverlays = this.gOverlay.selectAll("g.groups")
-            .data(diagram.relationships);
+            .data(this.diagram.relationships);
 
         relOverlays.enter()
             .append("g")
@@ -267,8 +265,10 @@ export class DiagramComponent implements AfterViewInit  {
                     .on("click", (rl) => {
                     if(this.access != "Read Only"){
                         if(!this.deleteElement){
-                            //this.currentR = rl;
-
+                            this.color = "";
+                            this.currentRel = rl;
+                            this.showEditForm = true;
+                            this.showEditNode = false;
                           } else {
                             this.db.deleteR(rl, this.currentDiagram);
                           }
@@ -276,7 +276,7 @@ export class DiagramComponent implements AfterViewInit  {
                    });
 
         let nodeRing = this.gOverlay.selectAll('rect.ring')
-            .data(diagram.nodes)
+            .data(this.diagram.nodes)
 
         nodeRing.enter()
             .append("rect")
@@ -319,7 +319,7 @@ export class DiagramComponent implements AfterViewInit  {
             newNode.x = d3.mouse(this)[0] - newNode.radius;
             newNode.y = d3.mouse(this)[1] - newNode.radius;
 
-            for(let node of diagram.nodes){
+            for(let node of that.diagram.nodes){
                 if(node.id != n.id){
                     if(node.distanceTo(newNode) <= node.radius + newNode.radius){
                         closestNode = node.id;
@@ -356,7 +356,7 @@ export class DiagramComponent implements AfterViewInit  {
                         + ")" + "rotate("
                         + n.angleTo(newNode) + ")"
                         )
-                    .attr("d", diagram.horizontalArrow(n.radius + 12, distance, 5).outline)
+                    .attr("d", that.diagram.horizontalArrow(n.radius + 12, distance, 5).outline)
                     .attr("fill", "#333333");           
             }
         }
@@ -414,19 +414,26 @@ export class DiagramComponent implements AfterViewInit  {
 
     saveNode(node) {
         node.radius = this.getTxtLength(node.caption);
-
+        let longest = node.properties
+            .split('\n')
+            .reduce((a, b) => { return a.length > b.length ? a : b; });
+        node.propertiesWidth = this.getTxtLength(longest);
+            
         this.db.saveNode(node, this.currentDiagram);
+        this.showEditForm = false;
     }
 
     deleteNode(nodeId) {
         let updateObj = {};
-        // diagram.relationships.filter((rl) => {
-        //     if(rl[0].startNode == this.currentNode.id || rl[0].endNode == this.currentNode.id){
-        //         updateObj['relationships/' + rl[0].group] = null;
-        //     }
-        // })
+        this.diagram.relationships.filter((rl) => {
+            if(rl[0].startNode == nodeId || rl[0].endNode == nodeId){
+                updateObj['relationships/' + rl[0].group] = null;
+            }
+        })
         updateObj['nodes/' + nodeId] = null;
+
         this.db.deleteNode(updateObj, this.currentDiagram);
+        this.showEditForm = false;
     }
 
 
@@ -440,8 +447,31 @@ export class DiagramComponent implements AfterViewInit  {
 
 
         this.db.addR(newRelationship, group, this.currentDiagram);
+        this.showEditForm = false;
     }
 
+    saveR(rel){
+        let longest = rel.properties
+            .split('\n')
+            .reduce((a, b) => { return a.length > b.length ? a : b; });
+        rel.propertiesWidth = this.getTxtLength(longest);
+
+        this.db.saveR(rel, this.currentDiagram);
+        this.showEditForm = false;
+    }
+
+    deleteR(rel){
+        this.db.deleteR(rel, this.currentDiagram);
+        this.showEditForm = false;
+    }
+
+    reverseR(rel){
+        this.db.reverseR(rel, this.currentDiagram);
+        this.showEditForm = false;
+    }
+
+
+    /* Tools */
 
     getTxtLength(text){
         let txt = this.svg.append("text")
@@ -464,6 +494,10 @@ export class DiagramComponent implements AfterViewInit  {
             this.mirrorNode.fill = node.fill;
             this.mirrorNode.isRectangle = node.isRectangle;
         }
+    }
+
+    changeColor(color){
+        this.color = color;
     }
 
     undo(){

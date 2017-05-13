@@ -1,34 +1,32 @@
-import { Component, AfterViewInit } from '@angular/core';
-
-import { Database } from '../shared/diagram.service';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
     selector: 'node-form',
     templateUrl: './node-form.component.html',
     styleUrls: ['./node-form.component.css'],
-    providers: [Database]
 })
-export class NodeFormComponent implements AfterViewInit {
-    public node: any;
-    constructor( private db: Database ) {}
-
-    ngAfterViewInit() {
+export class NodeFormComponent {
+    isColor: boolean = true;
+    @Input() node: any;
+    @Input() 
+    set color(color: string){
+        if(this.isColor && color) {
+            this.node.color = color;
+        } else if (color) {
+            this.node.fill = color;
+        }
     }
 
-    save() {
+    @Output() saveNode = new EventEmitter<any>();
+    @Output() deleteNode = new EventEmitter<string>();
 
+    constructor() {}
+
+    save() {  
+        this.saveNode.emit(this.node);
     }
 
-    // changeColor(color){
-    //     if(this.showNodeTools){
-    //         if(this.propColor == 1){
-    //             this.currentNode.style.color = color;
-    //         } else {
-    //             this.currentNode.style.fill = color;
-    //         }
-    //     } else {
-    //         this.currentR.style.fill = color;
-    //     }
-    // }
-
+    delete(){
+        this.deleteNode.emit(this.node.id);
+    }
 }
